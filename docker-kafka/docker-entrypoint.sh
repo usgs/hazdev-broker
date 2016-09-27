@@ -8,12 +8,22 @@ _term () {
 trap _term SIGTERM
 
 
+# advertised host name is sent to clients that are connecting,
+# and should be configured to the public IP/hostname of the docker host.
+KAFKA_ADVERTISED_HOST_NAME=${KAFKA_ADVERTISED_HOST_NAME:-`hostname`}
+
+
 # start zookeeper
-/kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties &
+/kafka/bin/zookeeper-server-start.sh \
+    /kafka/config/zookeeper.properties \
+    &
 zookeeper=$!
 
 # start kafka
-/kafka/bin/kafka-server-start.sh /kafka/config/server.properties &
+/kafka/bin/kafka-server-start.sh \
+    /kafka/config/server.properties \
+    --override "advertised.host.name=${KAFKA_ADVERTISED_HOST_NAME}" \
+    &
 kafka=$!
 
 

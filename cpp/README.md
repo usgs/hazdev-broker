@@ -16,6 +16,9 @@ A copy of CMake is not included in this project
 to format, parse, and write JSON.  A copy of include/rapidjson is included in
 this project.
 
+The librdkafa and related dependencies (such as ssl libraries) are linked
+dynamically and are not included in the detection-formats.lib.
+
 Building
 ------
 The steps to get and build hazdev-broker using CMake are as follows:
@@ -41,5 +44,21 @@ Using
 ------
 Once you are able to build the hazdev-broker library, you should create a
 project or build target for your program. Make sure you have the location of
-Consumer.h or Producer.h in the header search path. Set program to link with the 
+Consumer.h or Producer.h in the header search path. Set program to link with the
 hazdev-broker library.
+
+Examples
+-----
+An example consumer and producer are included with the C++11 implementation of
+the Hazdev-Broker library.  The steps to use these examples are:
+1. Build the example programs, by ensureing that `BUILD_EXAMPLES` is enabled via
+Cmake (add `-BUILD_EXAMPLES=true`).
+2. Ensure that the Kafka Docker image is running, or start it,
+[see](../README.md#apache-kafka-docker-image).
+3. In the /cpp/dist/examples directory, edit the `metadata.broker.list` in
+consumer.config and producer.config to reflect where the Kafka Docker image is
+running.
+4. To run the example consumer, from the /cpp/dist/examples directory run the
+command `example_consumer consumer.config`.
+5. To run the example producer, from the /cpp/dist/examples directory run the
+command `example_producer producer.config`.

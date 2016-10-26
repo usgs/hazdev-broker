@@ -40,12 +40,17 @@ An example consumer and producer are included with the java implementation of
 the Hazdev-Broker library.  The steps to use these examples are:
 1. Build the example jars, by running the command `ant examples` from the /java/
 directory (if the examples have not already been built).
-2. Ensure that the Kafka Docker image is running, or start it,
-[see](../README.md#apache-kafka-docker-image).
+2. Ensure that the Kafka Docker image is running, or start it with the command
+`docker run -d --name docker-kafka -p 2181:2181 -p 9092:9092 -e KAFKA_ADVERTISED_HOST_NAME=`hostname` usgs/docker-kafka`
+[see](../README.md).
 3. In the /java/dist/examples directory, edit the `bootstrap.servers` in
 consumer.config and producer.config to reflect where the Kafka Docker image is
 running.
-4. To run the example consumer, from the /java/dist/examples directory run the
-command `java -jar ExampleConsumer consumer.config`.
-5. To run the example producer, from the /java/dist/examples directory run the
-command `java -jar ExampleProducer producer.config`.
+4. To run the example producer, from the /java/dist/examples directory in a new
+window, run the command `java -jar ExampleProducer producer.config`.  Please
+note that since the producer creates the example topic (default is "test"), the
+producer must be started first in this example.
+5. To run the example consumer, from the /java/dist/examples directory in a new
+window, run the command `java -jar ExampleConsumer consumer.config`.
+6. Type messages into the producer client window, and see them reported in the
+consumer client window.

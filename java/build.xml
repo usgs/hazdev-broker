@@ -88,6 +88,9 @@
 
 		<!-- Copy the example consumer configuration file -->
 		<copy file="${examples}/producer.config" todir="${dist}/examples"/>
+
+		<!-- Copy the example log4j configuration file -->
+		<copy file="${examples}/log4j.properties" todir="${dist}/examples"/>
 	</target>
 
 	<target name="javadoc" depends="jar" description="Run JavaDoc">

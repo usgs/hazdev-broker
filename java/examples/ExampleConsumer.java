@@ -2,6 +2,7 @@ package gov.usgs.examples;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.PropertyConfigurator;
 
 import gov.usgs.hazdevbroker.Consumer;
 
@@ -26,14 +27,21 @@ public class ExampleConsumer {
 	public static void main(String[] args) {
 
 		if (args.length == 0) {
-			System.out.println("Usage: ExampleConsumer <configfile>");
+			System.out.println("Usage: ExampleConsumer <configfile> <optional logging configuration file>");
 			System.exit(1);
 		}
 		
-		BasicConfigurator.configure();
-
 		String configFileName = args[0];
 
+		// init log4j
+		if (args.length == 1) {
+			System.out.println("Using default logging configuration");
+			BasicConfigurator.configure();
+		} else if (args.length >= 2) {
+			System.out.println("Using custom logging configuration");
+			PropertyConfigurator.configure(args[1]);
+		}
+		
 		// read the config file
 		File configFile = new File(configFileName);
 		BufferedReader configReader = null;

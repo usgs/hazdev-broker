@@ -1,5 +1,8 @@
 package gov.usgs.examples;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.BasicConfigurator;
+
 import gov.usgs.hazdevbroker.Consumer;
 
 import java.util.*;
@@ -26,6 +29,8 @@ public class ExampleConsumer {
 			System.out.println("Usage: ExampleConsumer <configfile>");
 			System.exit(1);
 		}
+		
+		BasicConfigurator.configure();
 
 		String configFileName = args[0];
 

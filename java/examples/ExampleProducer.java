@@ -1,5 +1,8 @@
 package gov.usgs.examples;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.BasicConfigurator;
+
 import gov.usgs.hazdevbroker.Producer;
 
 import java.util.*;
@@ -27,6 +30,8 @@ public class ExampleProducer {
 			System.exit(1);
 		}
 
+		BasicConfigurator.configure();
+		
 		String configFileName = args[0];
 
 		// read the config file

@@ -38,19 +38,28 @@ Examples
 -----
 An example consumer and producer are included with the java implementation of
 the Hazdev-Broker library.  The steps to use these examples are:
-1. Build the example jars, by running the command `ant examples` from the /java/
+
+Build the example jars, by running the command `ant examples` from the /java/
 directory (if the examples have not already been built).
-2. Ensure that the Kafka Docker image is running, or start it with the command
-`docker run -d --name docker-kafka -p 2181:2181 -p 9092:9092 -e KAFKA_ADVERTISED_HOST_NAME=`hostname` usgs/docker-kafka`
-[see](../README.md).
-3. In the /java/dist/examples directory, edit the `bootstrap.servers` in
-consumer.config and producer.config to reflect where the Kafka Docker image is
-running.
-4. To run the example producer, from the /java/dist/examples directory in a new
+
+Ensure that the Kafka Docker image is running, or start it with the command:
+```
+docker run -d --name docker-kafka -p 2181:2181 -p 9092:9092 -e KAFKA_ADVERTISED_HOST_NAME=`hostname` usgs/docker-kafka
+```
+
+[See](../README.md) for additional information about the Kafka Docker image.
+
+Run the example producer, from the /java/dist/examples directory in a new
 window, run the command `java -jar ExampleProducer producer.config`.  Please
 note that since the producer creates the example topic (default is "test"), the
-producer must be started first in this example.
-5. To run the example consumer, from the /java/dist/examples directory in a new
-window, run the command `java -jar ExampleConsumer consumer.config`.
-6. Type messages into the producer client window, and see them reported in the
-consumer client window.
+producer must be started first in this example.  The example defaults to using
+the Kafka Docker image on localhost (edit the `bootstrap.servers` in  the
+producer.config if this is not true).
+
+To run the example consumer, from the /java/dist/examples directory in a new
+window, run the command `java -jar ExampleConsumer consumer.config`. The example
+defaults to using the Kafka Docker image on localhost (edit the
+`bootstrap.servers` in  the consumer.config if this is not true).
+
+Type messages into the producer client window, and observe the messages reported
+in the consumer client window.

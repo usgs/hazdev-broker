@@ -47,7 +47,7 @@ Ensure that the Kafka Docker image is running, or start it with the command:
 docker run -d --name docker-kafka -p 2181:2181 -p 9092:9092 -e KAFKA_ADVERTISED_HOST_NAME=`hostname` usgs/docker-kafka
 ```
 
-[See](../README.md) for additional information about the Kafka Docker image.
+See [here](../README.md) for additional information about the Kafka Docker image.
 
 Run the example producer, from the /java/dist/examples directory in a new
 window, run the command `java -jar ExampleProducer producer.config`.  Please

@@ -51,14 +51,28 @@ Examples
 -----
 An example consumer and producer are included with the C++11 implementation of
 the Hazdev-Broker library.  The steps to use these examples are:
-1. Build the example programs, by ensureing that `BUILD_EXAMPLES` is enabled via
+
+Build the example programs, by ensuring that `BUILD_EXAMPLES` is enabled via
 Cmake (add `-BUILD_EXAMPLES=true`).
-2. Ensure that the Kafka Docker image is running, or start it,
-[see](../README.md#apache-kafka-docker-image).
-3. In the /cpp/dist/examples directory, edit the `metadata.broker.list` in
-consumer.config and producer.config to reflect where the Kafka Docker image is
-running.
-4. To run the example consumer, from the /cpp/dist/examples directory run the
-command `example_consumer consumer.config`.
-5. To run the example producer, from the /cpp/dist/examples directory run the
-command `example_producer producer.config`.
+
+Ensure that the Kafka Docker image is running, or start it with the command:
+```
+docker run -d --name docker-kafka -p 2181:2181 -p 9092:9092 -e KAFKA_ADVERTISED_HOST_NAME=`hostname` usgs/docker-kafka
+```
+
+See [here](../README.md) for additional information about the Kafka Docker image.
+
+Run the example producer, from the /cpp/dist/examples directory in a new
+window, run the command `example_producer.exe producer.config`.  Please
+note that since the producer creates the example topic (default is "test"), the
+producer must be started first in this example.  The example defaults to using
+the Kafka Docker image on localhost (edit the `metadata.broker.list` in  the
+producer.config if this is not true).
+
+To run the example consumer, from the /cpp/dist/examples directory in a new
+window, run the command `example_consumer.exe consumer.config`. The
+example defaults to using the Kafka Docker image on localhost (edit the
+`metadata.broker.list` in  the consumer.config if this is not true).
+
+Type messages into the producer client window, and observe the messages reported
+in the consumer client window.

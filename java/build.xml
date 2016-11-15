@@ -1,0 +1,112 @@
+<project name="hazdev-broker" default="jar" basedir=".">
+
+	<description>
+		hazdev-broker java library.
+	</description>
+
+
+	<!-- PROJECT PROPERTIES -->
+	<property name="src" location="src" />
+	<property name="examples" location="examples" />
+	<property name="lib" location="../lib" />
+	<property name="build" location="build" />
+	<property name="dist" location="dist" />
+
+	<!-- CLASSPATH -->
+	<fileset dir="${lib}" id="classpath.fileset">
+		<include name="kafka-clients-0.10.0.1.jar" />
+		<include name="json-simple-1.1.1.jar" />
+		<include name="slf4j-log4j12-1.7.21.jar" />
+		<include name="slf4j-api-1.7.21.jar" />
+		<include name="log4j-1.2.17.jar" />
+	</fileset>
+
+	<path id="classpath">
+		<fileset refid="classpath.fileset" />
+				<fileset dir="${lib}">
+		</fileset>
+	</path>
+
+	<!-- TARGETS -->
+	<target name="compile" description="Compile code">
+		<mkdir dir="${build}" />
+
+		<javac srcdir="${src}" destdir="${build}" source="1.7" target="1.7" includeAntRuntime="no" debug="${compile.debug}">
+			<classpath refid="classpath" />
+		</javac>
+
+		<javac srcdir="${examples}" destdir="${build}" source="1.7" target="1.7" includeAntRuntime="no" debug="${compile.debug}">
+			<classpath refid="classpath" />
+<!--				<compilerarg value="-Xlint:unchecked"/> -->
+		</javac>
+	</target>
+
+	<target name="jar" depends="compile" description="Build jar">
+		<mkdir dir="${dist}" />
+
+		<!-- Build the main jar file -->
+		<jar jarfile="${dist}/hazdev-broker/hazdev-broker.jar" basedir="${build}" excludes="**/*Example*">
+			<manifest>
+				<attribute name="Main-Class" value="gov.usgs.hazdev-broker.Producer" />
+			</manifest>
+
+			<!-- Include dependencies in jar -->
+			<zipgroupfileset refid="classpath.fileset" />
+		</jar>
+
+		<!-- Build the zip distribution -->
+		<zip destfile="${dist}/hazdev-broker.zip" basedir="${dist}">
+			<include name="hazdev-broker/**"/>
+		</zip>
+	</target>
+
+	<target name="examples" depends="compile, jar" description="Build jar">
+		<mkdir dir="${dist}" />
+
+		<!-- Build the example consumer jar file -->
+		<jar jarfile="${dist}/examples/ExampleConsumer.jar" basedir="${build}" excludes="**/*Producer*">
+			<manifest>
+				<attribute name="Main-Class" value="gov.usgs.examples.ExampleConsumer" />
+			</manifest>
+
+			<!-- Include hazdev-broker in example jar -->
+			<zipgroupfileset dir="${dist}" includes="hazdev-broker/hazdev-broker.jar" />
+		</jar>
+
+		<!-- Copy the example consumer configuration file -->
+		<copy file="${examples}/consumer.config" todir="${dist}/examples"/>
+
+		<!-- Build the example producer jar file -->
+		<jar jarfile="${dist}/examples/ExampleProducer.jar" basedir="${build}" excludes="**/*Consumer*">
+			<manifest>
+				<attribute name="Main-Class" value="gov.usgs.examples.ExampleProducer" />
+			</manifest>
+
+			<!-- Include hazdev-broker in example jar -->
+			<zipgroupfileset dir="${dist}" includes="hazdev-broker/hazdev-broker.jar" />
+		</jar>
+
+		<!-- Copy the example consumer configuration file -->
+		<copy file="${examples}/producer.config" todir="${dist}/examples"/>
+
+		<!-- Copy the example log4j configuration file -->
+		<copy file="${examples}/log4j.properties" todir="${dist}/examples"/>
+	</target>
+
+	<target name="javadoc" depends="jar" description="Run JavaDoc">
+		<javadoc destdir="${dist}/javadoc" packagenames="gov.usgs.hazdev-broker.*">
+			<fileset dir="${src}" excludes="**/*Test*" />
+			<classpath refid="classpath" />
+		</javadoc>
+	</target>
+
+	<target name="clean" description="Delete build and dist directories">
+		<delete dir="${build}" />
+		<delete dir="${dist}" />
+		<delete dir="${instrumented.dir}" />
+		<delete file="cobertura.ser" />
+	</target>
+
+	<target name="all" depends="clean,jar,javadoc,examples" description="clean, jar, examples, and javadoc" />
+
+</project>

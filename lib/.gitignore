@@ -1,0 +1,4 @@
+/bin/
+/librdkafka/
+/rapidjson/
+.DS_Store

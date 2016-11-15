@@ -50,15 +50,15 @@ docker run -d --name docker-kafka -p 2181:2181 -p 9092:9092 -e KAFKA_ADVERTISED_
 See [here](../README.md) for additional information about the Kafka Docker image.
 
 Run the example producer, from the /java/dist/examples directory in a new
-window, run the command `java -jar ExampleProducer producer.config`.  Please
+window, run the command `java -jar ExampleProducer.jar producer.config`.  Please
 note that since the producer creates the example topic (default is "test"), the
 producer must be started first in this example.  The example defaults to using
 the Kafka Docker image on localhost (edit the `bootstrap.servers` in  the
 producer.config if this is not true).
 
 To run the example consumer, from the /java/dist/examples directory in a new
-window, run the command `java -jar ExampleConsumer consumer.config`. The example
-defaults to using the Kafka Docker image on localhost (edit the
+window, run the command `java -jar ExampleConsumer.jar consumer.config`. The
+example defaults to using the Kafka Docker image on localhost (edit the
 `bootstrap.servers` in  the consumer.config if this is not true).
 
 Type messages into the producer client window, and observe the messages reported

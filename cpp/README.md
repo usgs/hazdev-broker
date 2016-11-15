@@ -24,10 +24,10 @@ Building
 The steps to get and build hazdev-broker using CMake are as follows:
 
 1. Clone hazdev-broker.
-2. Open a command window and change directories to `lib/``
-3. Extract the `librdkafka.zip` and `rapidjson.zip` to `lib/librdkafka/`` and
-`lib/rapidjson/``
-3. Change directories to `cpp/``
+2. Open a command window and change directories to `lib/`
+3. Extract the `librdkafka.zip` and `rapidjson.zip` to `lib/librdkafka/` and
+`lib/rapidjson/`
+3. Change directories to `cpp/`
 4. Make a build directory `mkdir build`
 5. Change to the build directory `cd build`
 6. Run CMake `cmake ..`.

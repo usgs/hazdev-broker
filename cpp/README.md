@@ -25,23 +25,24 @@ The steps to get and build hazdev-broker using CMake are as follows:
 
 1. Clone hazdev-broker.
 2. Open a command window and change directories to `lib/`
-3. Extract the `librdkafka.zip` and `rapidjson.zip` to `lib/librdkafka/` and
-`lib/rapidjson/`
-3. Change directories to `cpp/`
-4. Make a build directory `mkdir build`
-5. Change to the build directory `cd build`
-6. Run CMake `cmake ..`.
-7. If you are on a \*nix system, you should now see a Makefile in the current
-directory.  Just type 'make' to build detection-formats.  'make install' will
+3. Extract the `librdkafka.zip` to `lib/librdkafka/`
+4. Change directories to `cpp/`
+5. Make a build directory `mkdir build`
+6. Change to the build directory `cd build`
+7. Run CMake `cmake ..`.
+8. If you are on a \*nix system, you should now see a Makefile in the current
+directory.  Just type `make` to build hazdev-broker. `make doc` will generate
+the documentation if doxygen is installed on the system. `make install` will
 copy the include files and libraries to the location defined by
-`CMAKE_INSTALL_PREFIX`.
-8. If you are on Windows and have Visual Studio installed, a `HazdevBroker.sln`
+`CMAKE_INSTALL_PREFIX`. You can modify the installation target by adding:``` -DCMAKE_INSTALL_PREFIX=../cpp/dist ```
+to the cmake command.
+9. If you are on Windows and have Visual Studio installed, a `HazdevBroker.sln`
 file and several `.vcproj` files will be created.  You can then build them using
 Visual Studio.  Building the INSTALL project will copy the include files and
-libraries to the location defined by `CMAKE_INSTALL_PREFIX` (add
-`-DCMAKE_INSTALL_PREFIX=<path to install location>` to cmake call to define
-install location).
-9. Note that for \*nix you must generate separate build directories for x86 vs
+libraries to the location defined by `CMAKE_INSTALL_PREFIX`. You can modify the
+installation target by adding:``` -DCMAKE_INSTALL_PREFIX=../cpp/dist ```
+to the cmake command.
+10. Note that for \*nix you must generate separate build directories for x86 vs
 x64 compilation specifying the appropriate generator `cmake -G <generator> ..`
 
 Using
@@ -49,21 +50,38 @@ Using
 Once you are able to build the hazdev-broker library, you should create a
 project or build target for your program. Make sure you have the location of
 Consumer.h or Producer.h in the header search path. Set program to link with the
-hazdev-broker library.
+hazdev-broker library.  Also make sure that you have built the rdkafka library
+(`lib/librdkafka/`), and include it's libraries in your path.  See the examples
+section for instructions on building the librdkafka library.
 
 Examples
 -----
-An example consumer and producer are included with the C++11 implementation of
-the Hazdev-Broker library.  The steps to use these examples are:
+Example consumer and producer applications are included with the C++11
+implementation of the Hazdev-Broker library.  The steps to use these examples
+are:
 
 Build the examples
 
-1. Build the librdkafka library in `lib/librdkafka/` by entering the command
-`./configure` followed by the commands `make`
-2. Install the librdkafka library by running the command `sudo make install`.
+1. Open a command window and change directories to `lib/`
+2. Extract the `rapidjson.zip` to `lib/rapidjson/`
+3. Build the librdkafka library in `lib/librdkafka/` by entering the command
+`./configure` followed by the command `make`
+4. Install the librdkafka library by running the command `sudo make install`.
 This will install rdkafaka to `/usr/local/lib` and `/usr/local/include`.
-3. Build the example programs, by ensuring that `BUILD_EXAMPLES` is enabled and
-librdkafka is referenced as part of the CMake (add `-DBUILD_EXAMPLES=true -DRDKAFKA=/usr/local/lib/librdkafka++.dylib -DRDKAFKA_PATH=/usr/local/include/librdkafka `).
+5. Generate the example makefiles, by ensuring that `BUILD_EXAMPLES` is enabled
+and librdkafka is referenced as part of CMake by adding ``` -DBUILD_EXAMPLES=true -DRDKAFKA=/usr/local/lib/librdkafka++.dylib -DRDKAFKA_PATH=/usr/local/include/librdkafka ```
+to the cmake command.
+6. If you are on a \*nix system, you should see a Makefile in the current
+directory.  Just type `make example_consumer` to build the example consumer,
+and `make example_producer` to build the example producer, or type `make all` to
+build both examples and install them to the the location defined by
+`CMAKE_INSTALL_PREFIX`.
+7. If you are on Windows and have Visual Studio installed, a `HazdevBroker.sln`
+file and several `.vcproj` files will be created.  You can then build them using
+Visual Studio.  Building the EXAMPLE_CONSUMER and EXAMPLE_PRODUCER projects will
+build the examples.  Building the INSTALL project will copy the examples to the
+location defined by `CMAKE_INSTALL_PREFIX`. You can modify the installation 
+target by adding:``` -DCMAKE_INSTALL_PREFIX=../cpp/dist ``` to the cmake command.
 
 Start Kafka
 

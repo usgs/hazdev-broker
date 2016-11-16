@@ -7,7 +7,7 @@
 
 	<!-- PROJECT PROPERTIES -->
 	<property name="src" location="src" />
-	<property name="examples" location="examples" />
+	<property name="examples" location="src/gov/usgs/examples" />
 	<property name="lib" location="../lib" />
 	<property name="build" location="build" />
 	<property name="dist" location="dist" />
@@ -35,10 +35,10 @@
 			<classpath refid="classpath" />
 		</javac>
 
-		<javac srcdir="${examples}" destdir="${build}" source="1.7" target="1.7" includeAntRuntime="no" debug="${compile.debug}">
-			<classpath refid="classpath" />
+<!--		<javac srcdir="${examples}" destdir="${build}" source="1.7" target="1.7" includeAntRuntime="no" debug="${compile.debug}">
+			<classpath refid="classpath" /> -->
 <!--				<compilerarg value="-Xlint:unchecked"/> -->
-		</javac>
+<!--		</javac> -->
 	</target>
 
 	<target name="jar" depends="compile" description="Build jar">
@@ -47,7 +47,7 @@
 		<!-- Build the main jar file -->
 		<jar jarfile="${dist}/hazdev-broker/hazdev-broker.jar" basedir="${build}" excludes="**/*Example*">
 			<manifest>
-				<attribute name="Main-Class" value="gov.usgs.hazdev-broker.Producer" />
+				<attribute name="Main-Class" value="gov.usgs.consumerclient.ConsumerClient" />
 			</manifest>
 
 			<!-- Include dependencies in jar -->
@@ -64,7 +64,7 @@
 		<mkdir dir="${dist}" />
 
 		<!-- Build the example consumer jar file -->
-		<jar jarfile="${dist}/examples/ExampleConsumer.jar" basedir="${build}" excludes="**/*Producer*">
+		<jar jarfile="${dist}/examples/ExampleConsumer.jar" basedir="${build}" excludes="**/*Producer*, **/ConsumerClient*">
 			<manifest>
 				<attribute name="Main-Class" value="gov.usgs.examples.ExampleConsumer" />
 			</manifest>
@@ -77,7 +77,7 @@
 		<copy file="${examples}/consumer.config" todir="${dist}/examples"/>
 
 		<!-- Build the example producer jar file -->
-		<jar jarfile="${dist}/examples/ExampleProducer.jar" basedir="${build}" excludes="**/*Consumer*">
+		<jar jarfile="${dist}/examples/ExampleProducer.jar" basedir="${build}" excludes="**/*Consumer*, **/ConsumerClient*">
 			<manifest>
 				<attribute name="Main-Class" value="gov.usgs.examples.ExampleProducer" />
 			</manifest>
@@ -95,7 +95,7 @@
 
 	<target name="javadoc" depends="jar" description="Run JavaDoc">
 		<javadoc destdir="${dist}/javadoc" packagenames="gov.usgs.hazdev-broker.*">
-			<fileset dir="${src}" excludes="**/*Test*" />
+			<fileset dir="${src}" excludes="**/*Test*, **/*.config, **/*.properties" />
 			<classpath refid="classpath" />
 		</javadoc>
 	</target>

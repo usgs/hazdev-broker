@@ -1,10 +1,10 @@
-package gov.usgs.examples;
+package gov.usgs.consumerclient;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
-import gov.usgs.hazdevbroker.Producer;
+import gov.usgs.hazdevbroker.Consumer;
 
 import java.util.*;
 import java.io.BufferedReader;
@@ -19,29 +19,21 @@ import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-public class ExampleProducer {
+public class ConsumerClient {
 
+	public static final String LOG4J_CONFIGFILE = "Log4JConfigFile";
 	public static final String BROKER_CONFIG = "HazdevBrokerConfig";
-	public static final String TOPIC = "Topic";
+	public static final String TOPIC_LIST = "TopicList";
 
 	public static void main(String[] args) {
 
 		if (args.length == 0) {
-			System.out.println("Usage: ExampleProducer <configfile>  <optional logging configuration file>");
+			System.out.println("Usage: ConsumerClient <configfile>");
 			System.exit(1);
 		}
-		
+
 		String configFileName = args[0];
 
-		// init log4j
-		if (args.length == 1) {
-			System.out.println("Using default logging configuration");
-			BasicConfigurator.configure();
-		} else if (args.length >= 2) {
-			System.out.println("Using custom logging configuration");
-			PropertyConfigurator.configure(args[1]);
-		}
-		
 		// read the config file
 		File configFile = new File(configFileName);
 		BufferedReader configReader = null;
@@ -83,6 +75,17 @@ public class ExampleProducer {
 			System.exit(1);
 		}
 
+		// get log4j config
+		String logConfigString = null;
+		if (configJSON.containsKey(LOG4J_CONFIGFILE)) {
+			logConfigString = (String) configJSON.get(LOG4J_CONFIGFILE);
+			System.out.println("Using custom logging configuration");
+			PropertyConfigurator.configure(logConfigString);
+		} else {
+			System.out.println("Using default logging configuration");
+			BasicConfigurator.configure();
+		}
+
 		// get broker config
 		JSONObject brokerConfig = null;
 		if (configJSON.containsKey(BROKER_CONFIG)) {
@@ -93,26 +96,6 @@ public class ExampleProducer {
 			System.exit(1);
 		}
 
-		// get topic
-		String topic = "";
-		if (configJSON.containsKey(TOPIC)) {
-			topic = (String) configJSON.get(TOPIC);
-		} else {
-			System.out.println("Error, did not find Topic in configuration.");
-			System.exit(1);
-		}
-
-		// create producer
-		Producer m_Producer = new Producer(brokerConfig);
-
-		// run until stopped
-		while (true) {
-
-			// get message to send
-			String message = System.console().readLine();
-
-			// send message
-			m_Producer.sendString(topic, message);
-		}
 	}
+
 }

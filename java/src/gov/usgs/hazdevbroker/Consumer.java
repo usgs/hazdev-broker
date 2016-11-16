@@ -65,7 +65,7 @@ public class Consumer extends ClientBase {
 	 * @param configString
 	 *            - A JSON formatted String containing the configuration
 	 * @throws org.json.simple.parser.ParseException
-	 *             if a json parse exception occurs           
+	 *             if a json parse exception occurs
 	 */
 	public Consumer(String configString) throws ParseException {
 		// init

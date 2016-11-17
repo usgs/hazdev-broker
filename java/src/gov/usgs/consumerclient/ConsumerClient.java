@@ -41,6 +41,9 @@ public class ConsumerClient {
 
 	private static Long lastFileWriteTime;
 
+	// Logger instance named "MyApp".
+	 static Logger logger = Logger.getLogger(ConsumerClient.class);
+
 	public static void main(String[] args) {
 
 		if (args.length == 0) {
@@ -84,8 +87,6 @@ public class ConsumerClient {
 			}
 		}
 
-		System.out.println("Read Config.");
-
 		// parse config file into json
 		JSONObject configJSON = null;
 		try {
@@ -102,8 +103,6 @@ public class ConsumerClient {
 			System.exit(1);
 		}
 
-		System.out.println("Parsed Config.");
-
 		// get log4j config
 		String logConfigString = null;
 		if (configJSON.containsKey(LOG4J_CONFIGFILE)) {
@@ -118,48 +117,48 @@ public class ConsumerClient {
 		// get file extension
 		if (configJSON.containsKey(FILE_EXTENSION)) {
 			fileExtension = (String) configJSON.get(FILE_EXTENSION);
+			logger.info("Using configured fileExtension of: " + fileExtension);
 		} else {
-			System.out.println(
+			logger.error(
 					"Error, did not find FileExtension in configuration.");
 			System.exit(1);
 		}
 
-		System.out.println("Got Extension.");
-
 		// get output directory
 		if (configJSON.containsKey(OUTPUT_DIRECTORY)) {
 			outputDirectory = (String) configJSON.get(OUTPUT_DIRECTORY);
+			logger.info("Using configured outputDirectory of: " + outputDirectory);
 		} else {
-			System.out.println(
+			logger.error(
 					"Error, did not find OutputDirectory in configuration.");
 			System.exit(1);
 		}
-
-		System.out.println("Got output directory.");
 
 
 		// get messages per file
 		if (configJSON.containsKey(MESSAGES_PER_FILE)) {
 			messagesPerFile = (Long)configJSON.get(MESSAGES_PER_FILE);
+			logger.info("Using configured messagesPerFile of: " + messagesPerFile.toString());
 		} else {
 			messagesPerFile = (long) 1;
+			logger.info("Using default messagesPerFile of: " + messagesPerFile.toString());
 		}
 
-		System.out.println("Got Messages per file.");
 
 		// get time per file
 		if (configJSON.containsKey(TIME_PER_FILE)) {
 			timePerFile = (Long) configJSON.get(TIME_PER_FILE);
+			logger.info("Using configured timePerFile of: " + timePerFile.toString());
+		} else {
+			logger.info("Not using timePerFile.");
 		}
-
-		System.out.println("Got Time per file.");
 
 		// get broker config
 		JSONObject brokerConfig = null;
 		if (configJSON.containsKey(BROKER_CONFIG)) {
 			brokerConfig = (JSONObject) configJSON.get(BROKER_CONFIG);
 		} else {
-			System.out.println(
+			logger.error(
 					"Error, did not find HazdevBrokerConfig in configuration.");
 			System.exit(1);
 		}
@@ -179,20 +178,17 @@ public class ConsumerClient {
 				topicList.add(topic);
 			}
 		} else {
-			System.out
-					.println("Error, did not find TopicList in configuration.");
+			logger.error("Error, did not find TopicList in configuration.");
 			System.exit(1);
 		}
 
 		// nullcheck
 		if (topicList == null) {
-			System.out.println("Error, invalid TopicList from configuration.");
+			logger.error("Error, invalid TopicList from configuration.");
 			System.exit(1);
 		}
 
-		System.out.println("Got topic list.");
-
-		System.out.println("Processed Config.");
+		logger.info("Processed Config.");
 
 		// create consumer
 		Consumer m_Consumer = new Consumer(brokerConfig);
@@ -200,7 +196,7 @@ public class ConsumerClient {
 		// subscribe to topics
 		m_Consumer.subscribe(topicList);
 
-		System.out.println("Created Consumer.");
+		logger.info("Created Consumer.");
 
 		// run until stopped
 		while (true) {
@@ -216,7 +212,7 @@ public class ConsumerClient {
 			// add messages to queue
 			for (int i = 0; i < brokerMessages.size(); i++) {
 				String message = brokerMessages.get(i);
-				System.out.println(message);
+				logger.debug(message);
 				fileQueue.add(message);
 			}
 
@@ -228,8 +224,8 @@ public class ConsumerClient {
 
 			// check to see if we have enough messages to write
 			if (fileQueue.size() >= messagesPerFile) {
-				System.out.println("Writing message due to number of messages.");
-				System.out.println(String.valueOf(fileQueue.size()));
+				logger.debug("Writing message due to number of messages.");
+				//System.out.println(String.valueOf(fileQueue.size()));
 				writeMessagesToDisk(messagesPerFile.intValue());
 			// otherwise check to see if it's been long enough to force
 			// a file
@@ -240,7 +236,7 @@ public class ConsumerClient {
 
 				// has it been long enough:
 				if ((timeNow - lastFileWriteTime) > timePerFile) {
-					System.out.println("Writing message due to time.");
+					logger.debug("Writing message due to time.");
 					// write all pending messages to disk
 					writeMessagesToDisk(fileQueue.size());
 				}
@@ -279,7 +275,7 @@ public class ConsumerClient {
 
 		} catch (Exception e) {
 
-			System.out.println(e.toString());
+			logger.error(e.toString());
 			return (false);
 		}
 

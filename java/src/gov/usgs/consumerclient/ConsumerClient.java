@@ -20,8 +20,18 @@ import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+/**
+ * a client class used to consume messages out of one or more hazdev-broker
+ * (kafka) topics and write the messages to files based on the provided
+ * configuration
+ *
+ * @author U.S. Geological Survey &lt;jpatton at usgs.gov&gt;
+ */
 public class ConsumerClient {
 
+	/**
+	 * JSON Configuration Keys
+	 */
 	public static final String LOG4J_CONFIGFILE = "Log4JConfigFile";
 	public static final String BROKER_CONFIG = "HazdevBrokerConfig";
 	public static final String TOPIC_LIST = "TopicList";
@@ -30,27 +40,58 @@ public class ConsumerClient {
 	public static final String TIME_PER_FILE = "TimePerFile";
 	public static final String OUTPUT_DIRECTORY = "OutputDirectory";
 
-	// queue to hold messages to be written to file
-	private static Queue<String> fileQueue;
-
-	// configuration values
+	/**
+	 * Required configuration string defining the output directory
+	 */
 	private static String outputDirectory;
+
+	/**
+	 * Required configuration string defining the output file extension
+	 */
 	private static String fileExtension;
+
+	/**
+	 * Optional configuration Long defining the number of messages per file,
+	 * default is one.
+	 */
 	private static Long messagesPerFile;
+
+	/**
+	 * Optional configuration Long defining the number seconds before writing a
+	 * file with less than the configured number of messages, default is null
+	 */
 	private static Long timePerFile;
 
+	/**
+	 * Log4J logger for ConsumerClient
+	 */
+	static Logger logger = Logger.getLogger(ConsumerClient.class);
+
+	/**
+	 * Queue object to hold messages that need to be written to the file
+	 */
+	private static Queue<String> fileQueue;
+
+	/**
+	 * Variable containing time the last file was written.
+	 */
 	private static Long lastFileWriteTime;
 
-	// Logger instance named "MyApp".
-	 static Logger logger = Logger.getLogger(ConsumerClient.class);
-
+	/**
+	 * main function for ConsumerClient
+	 *
+	 * @param args
+	 *            - A String[] containing the command line arguments.
+	 */
 	public static void main(String[] args) {
 
+		// check number of arguments
 		if (args.length == 0) {
-			System.out.println("Usage: ConsumerClient <configfile>");
+			System.out.println("Usage: hazdev-broker <configfile>");
 			System.exit(1);
 		}
 
+		// init to default values
 		fileQueue = new LinkedList<String>();
 		outputDirectory = null;
 		fileExtension = null;
@@ -60,13 +101,13 @@ public class ConsumerClient {
 		// init last write time to now
 		lastFileWriteTime = (Long) (System.currentTimeMillis() / 1000);
 
+		// get config file name
 		String configFileName = args[0];
 
 		// read the config file
 		File configFile = new File(configFileName);
 		BufferedReader configReader = null;
 		StringBuffer configBuffer = new StringBuffer();
-
 		try {
 			configReader = new BufferedReader(new FileReader(configFile));
 			String text = null;
@@ -119,36 +160,37 @@ public class ConsumerClient {
 			fileExtension = (String) configJSON.get(FILE_EXTENSION);
 			logger.info("Using configured fileExtension of: " + fileExtension);
 		} else {
-			logger.error(
-					"Error, did not find FileExtension in configuration.");
+			logger.error("Error, did not find FileExtension in configuration.");
 			System.exit(1);
 		}
 
 		// get output directory
 		if (configJSON.containsKey(OUTPUT_DIRECTORY)) {
 			outputDirectory = (String) configJSON.get(OUTPUT_DIRECTORY);
-			logger.info("Using configured outputDirectory of: " + outputDirectory);
+			logger.info(
+					"Using configured outputDirectory of: " + outputDirectory);
 		} else {
 			logger.error(
 					"Error, did not find OutputDirectory in configuration.");
 			System.exit(1);
 		}
 
-
 		// get messages per file
 		if (configJSON.containsKey(MESSAGES_PER_FILE)) {
-			messagesPerFile = (Long)configJSON.get(MESSAGES_PER_FILE);
-			logger.info("Using configured messagesPerFile of: " + messagesPerFile.toString());
+			messagesPerFile = (Long) configJSON.get(MESSAGES_PER_FILE);
+			logger.info("Using configured messagesPerFile of: "
+					+ messagesPerFile.toString());
 		} else {
 			messagesPerFile = (long) 1;
-			logger.info("Using default messagesPerFile of: " + messagesPerFile.toString());
+			logger.info("Using default messagesPerFile of: "
+					+ messagesPerFile.toString());
 		}
-
 
 		// get time per file
 		if (configJSON.containsKey(TIME_PER_FILE)) {
 			timePerFile = (Long) configJSON.get(TIME_PER_FILE);
-			logger.info("Using configured timePerFile of: " + timePerFile.toString());
+			logger.info("Using configured timePerFile of: "
+					+ timePerFile.toString());
 		} else {
 			logger.info("Not using timePerFile.");
 		}
@@ -162,8 +204,6 @@ public class ConsumerClient {
 					"Error, did not find HazdevBrokerConfig in configuration.");
 			System.exit(1);
 		}
-
-		System.out.println("Got broker config.");
 
 		// get topic list
 		ArrayList<String> topicList = null;
@@ -204,40 +244,56 @@ public class ConsumerClient {
 			// get messages from broker
 			ArrayList<String> brokerMessages = m_Consumer.pollString(500);
 
-			// did we get anything?
+			// nullcheck brokerMessages
 			if (brokerMessages == null) {
 				continue;
 			}
 
-			// add messages to queue
+			// add all messages in brokerMessages to queue
 			for (int i = 0; i < brokerMessages.size(); i++) {
+
+				// get string
 				String message = brokerMessages.get(i);
 				logger.debug(message);
+
+				// add string
 				fileQueue.add(message);
 			}
 
 			// check to see if we have anything to write
 			if (fileQueue.isEmpty()) {
-				System.out.println("Nothing to write.");
-				continue;
-			}
 
-			// check to see if we have enough messages to write
-			if (fileQueue.size() >= messagesPerFile) {
-				logger.debug("Writing message due to number of messages.");
-				//System.out.println(String.valueOf(fileQueue.size()));
+				// nothign to do
+				logger.debug("No messages to write.");
+				continue;
+				// check to see if we have enough messages to write
+			} else if (fileQueue.size() >= messagesPerFile) {
+
+				// we've got enough messages
+				logger.info("Writing output file due to number of messages, "
+						+ String.valueOf(fileQueue.size()) + " pending. ");
+
+				// write messagesPerFile worth of messages
 				writeMessagesToDisk(messagesPerFile.intValue());
-			// otherwise check to see if it's been long enough to force
-			// a file
+				// otherwise check to see if it's been long enough to force
+				// a file
 			} else if (timePerFile != null) {
 
 				// get current time in seconds
 				Long timeNow = System.currentTimeMillis() / 1000;
 
+				// calculate elapsed time
+				Long elapsedTime = timeNow - lastFileWriteTime;
+
 				// has it been long enough:
-				if ((timeNow - lastFileWriteTime) > timePerFile) {
-					logger.debug("Writing message due to time.");
-					// write all pending messages to disk
+				if (elapsedTime > timePerFile) {
+					logger.info("Writing output file due to time, "
+							+ elapsedTime.toString()
+							+ " seconds since last file");
+
+					// write all pending messages in the queue to disk
+					// we're sure there are less than messagesPerFile
+					// because otherwise that would have been handled above
 					writeMessagesToDisk(fileQueue.size());
 				}
 
@@ -245,6 +301,14 @@ public class ConsumerClient {
 		}
 	}
 
+	/**
+	 * File writing function for ConsumerClient
+	 *
+	 * @param numToWrite
+	 *            - An Integer containing the number of messages to write in
+	 *            this file.
+	 * @return Returns true if successful, false otherwise
+	 */
 	public static boolean writeMessagesToDisk(Integer numToWrite) {
 
 		try {
@@ -255,19 +319,24 @@ public class ConsumerClient {
 			String fileName = outputDirectory + "/" + timeNow.toString() + "."
 					+ fileExtension;
 
+			// create an UTF-8 formatted printwriter to write to disk
 			PrintWriter fileWriter = new PrintWriter(fileName, "UTF-8");
 
 			for (int i = 0; i < numToWrite; i++) {
+
 				// don't try to write if we're out of messages
 				if (fileQueue.isEmpty()) {
 					continue;
 				}
 
+				// get the next message to write
 				String messageString = fileQueue.remove();
-				//fileWriter.println(messageString);
+
+				// messages are null terminated, so just call print
 				fileWriter.print(messageString);
 			}
 
+			// done with file
 			fileWriter.close();
 
 			// Remember the time we wrote this file in seconds
@@ -275,6 +344,7 @@ public class ConsumerClient {
 
 		} catch (Exception e) {
 
+			// log exception
 			logger.error(e.toString());
 			return (false);
 		}

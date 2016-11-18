@@ -97,3 +97,7 @@ default.
 The consumer client uses log4j for logging, an [example log4j properties file](config/consumerclient/consumerclient.log4j.properties)
 is included with the Hazdev-Broker Jar.  For more information on configuring
 log4j, see [here](http://logging.apache.org/log4j/1.2/manual.html).
+
+**Using**
+
+To run the consumer client, run the command `java -jar hazdev-broker.jar consumerclient.config`.

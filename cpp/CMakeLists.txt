@@ -1,123 +1,227 @@
 cmake_minimum_required (VERSION 3.4)
 
 # ----- VERSION NUMBER----- #
-set(VERSION_MAJOR   0   CACHE STRING "hazdev-broker major version number.")
-set(VERSION_MINOR   1   CACHE STRING "hazdev-broker minor version number.")
-set(VERSION_PATCH   0   CACHE STRING "hazdev-broker patch version number.")
-mark_as_advanced(VERSION_MAJOR VERSION_MINOR VERSION_PATCH)
-
-# ----- OPTIONS ----- #
-# option(test "Build all tests." OFF)
+set(VERSION_MAJOR   0)
+set(VERSION_MINOR   1)
+set(VERSION_PATCH   0)
 
 # ----- OVERRIDE TO SET STATIC RUNTIME ON MSVC ----- #
 set(CMAKE_USER_MAKE_RULES_OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/c_flag_overrides.cmake)
 set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cxx_flag_overrides.cmake)
 
 # ----- PROJECT ----- #
-project (hazdev-broker)
+project (HazdevBroker VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+
+# ----- CMAKE INCLUDES ----- #
+include(ExternalProject)
 
 # ----- SET FOR C++14 STANDARD ----- #
 if (NOT MSVC)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 endif (NOT MSVC)
 
+# ----- CMAKE CONFIG HEADER ----- #
+# pass some of the CMake settings
+# to the source code
+configure_file (
+    "${PROJECT_SOURCE_DIR}/HazdevBrokerCMakeConfig.h.in"
+    "${PROJECT_BINARY_DIR}/HazdevBrokerCMakeConfig.h"
+)
+
+# ----- EXTERNAL LIBRARIES ----- #
+# librdkafka
+if (WIN32)
+    ExternalProject_Add(
+        librdkafka
+        GIT_REPOSITORY https://github.com/edenhill/librdkafka
+        #GIT_TAG v0.9.2
+        DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/../lib/librdkafka/
+        BUILD_COMMAND win32/build.bat
+        BUILD_IN_SOURCE 1
+        #INSTALL_COMMAND make install
+    )
+
+    SET(KAFKA_C_INC ${PROJECT_SOURCE_DIR}/../lib/librdkafka/src)
+    set (KAFKA_C_LIB "${KAFKA_C_INC}/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}")
+
+    SET(KAFKA_CPP_INC ${PROJECT_SOURCE_DIR}/../lib/librdkafka/src-cpp)
+    set (KAFKA_CPP_LIB "${KAFKA_CPP_INC}/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}")
+else()
+    ExternalProject_Add(
+        librdkafka
+        GIT_REPOSITORY https://github.com/edenhill/librdkafka.git
+        #GIT_TAG v0.9.2
+        DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/../lib/librdkafka/
+        CONFIGURE_COMMAND ./configure --prefix=${CMAKE_INSTALL_PREFIX}
+        BUILD_COMMAND make
+        BUILD_IN_SOURCE 1
+        INSTALL_COMMAND make install
+    )
+
+    SET(KAFKA_C_INC ${PROJECT_SOURCE_DIR}/../lib/librdkafka/src)
+    set (KAFKA_C_LIB "${KAFKA_C_INC}/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}")
+
+    SET(KAFKA_CPP_INC ${PROJECT_SOURCE_DIR}/../lib/librdkafka/src-cpp)
+    set (KAFKA_CPP_LIB "${KAFKA_CPP_INC}/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}")
+endif(WIN32)
+
 # ----- SET INCLUDE DIRECTORIES ----- #
+include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/../lib)
 include_directories(${PROJECT_SOURCE_DIR}/../lib/rapidjson)
-include_directories(${PROJECT_SOURCE_DIR}/../lib/librdkafka/src)
-include_directories(${PROJECT_SOURCE_DIR}/../lib/librdkafka/src-cpp)
+include_directories(${KAFKA_C_INC})
+include_directories(${KAFKA_CPP_INC})
 
 # ----- SET SOURCE FILES ----- #
-set (SRCS ${PROJECT_SOURCE_DIR}/src/ClientBase.cpp
-    ${PROJECT_SOURCE_DIR}/src/Consumer.cpp
-    ${PROJECT_SOURCE_DIR}/src/Producer.cpp
-)
+file(GLOB SRCS ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 # ----- SET HEADER FILES ----- #
-set (HDRS ${PROJECT_SOURCE_DIR}/include/ClientBase.h
-    ${PROJECT_SOURCE_DIR}/include/Consumer.h
-    ${PROJECT_SOURCE_DIR}/include/Producer.h
-)
-
-# ----- SET DEBUG EXTENSION ----- #
-if (CMAKE_BUILD_TYPE MATCHES DEBUG)
-    message(STATUS "Target is Debug")
-    set(DEBUG_EXTENSION "_d")
-else (CMAKE_BUILD_TYPE MATCHES DEBUG)
-    message(STATUS "Target is Release")
-    set(DEBUG_EXTENSION "")
-endif (CMAKE_BUILD_TYPE MATCHES DEBUG)
-
-# ----- SET 64 BIT EXTENSION ----- #
-if (CMAKE_SIZEOF_VOID_P EQUAL "8")
-    message(STATUS "Target is 64 bits")
-    set(PLATFORM_EXTENSION "_x64")
-else (CMAKE_SIZEOF_VOID_P EQUAL "8")
-    message(STATUS "Target is 32 bits")
-    set(PLATFORM_EXTENSION "")
-endif (CMAKE_SIZEOF_VOID_P EQUAL "8")
+file(GLOB HDRS ${PROJECT_SOURCE_DIR}/include/*.h)
 
 # ----- CREATE LIBRARY ----- #
-add_library (hazdev-broker STATIC ${SRCS} ${HDRS})
-set_target_properties(hazdev-broker PROPERTIES OUTPUT_NAME hazdev-broker${PLATFORM_EXTENSION}${DEBUG_EXTENSION})
+add_library (HazdevBroker STATIC ${SRCS} ${HDRS})
+
+# ----- TARGET PROPERTIES ----- #
+set_target_properties(HazdevBroker PROPERTIES
+    OUTPUT_NAME hazdevbroker)
+
+    # ----- GENERATE ----- #
+    include(GenerateExportHeader)
+    generate_export_header(HazdevBroker)
+
+    # ----- GLOBAL INCLUDES ----- #
+    target_include_directories(
+        HazdevBroker PUBLIC
+        "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
+    )
 
 # ----- CREATE EXAMPLES ----- #
 option(BUILD_EXAMPLES "Build examples." OFF)
 if (BUILD_EXAMPLES)
-  set (EXAMPLE_LIBS ${EXAMPLE_LIBS} hazdev-broker)
 
-  # ----- EXTERNAL LIBRARIES ----- #
-  # rdkafka
-  set(RDKAFKA_PATH "${CURRENT_SOURCE_DIR}/../../rdkafka/cpp/dist" CACHE PATH "Path to the rdkafka library")
-  find_library(RDKAFKA
-      rdkafka${PLATFORM_EXTENSION}${DEBUG_EXTENSION}
-      HINTS "${RDKAFKA_PATH}/lib"
-  )
-  # check to see if we found it
-  if (RDKAFKA STREQUAL "RDKAFKA-NOTFOUND")
-      message (FATAL_ERROR "Couldn't find the rdkafka library")
-  else ()
-      include_directories(${RDKAFKA_PATH})
-      set (EXAMPLE_LIBS ${EXAMPLE_LIBS} ${RDKAFKA})
-  endif ()
+    # ----- CREATE EXECUTABLES ----- #
+    add_executable (example_consumer ${PROJECT_SOURCE_DIR}/examples/example_consumer.cpp)
+    add_dependencies(example_consumer librdkafka)
+    target_link_libraries (example_consumer HazdevBroker)
+    target_link_libraries (example_consumer ${KAFKA_C_LIB})
+    target_link_libraries (example_consumer ${KAFKA_CPP_LIB})
+    install(TARGETS example_consumer DESTINATION examples)
+    install(FILES ${PROJECT_SOURCE_DIR}/examples/consumer.config DESTINATION examples)
 
-  # ----- CREATE EXECUTABLES ----- #
-  add_executable (example_consumer ${PROJECT_SOURCE_DIR}/examples/example_consumer.cpp)
-  target_link_libraries (example_consumer ${EXAMPLE_LIBS})
-  install(TARGETS example_consumer DESTINATION examples)
-  install(FILES ${PROJECT_SOURCE_DIR}/examples/consumer.config DESTINATION examples)
-
-  add_executable (example_producer ${PROJECT_SOURCE_DIR}/examples/example_producer.cpp)
-  target_link_libraries (example_producer ${EXAMPLE_LIBS})
-  install(TARGETS example_producer DESTINATION examples)
-  install(FILES ${PROJECT_SOURCE_DIR}/examples/producer.config DESTINATION examples)
+    add_executable (example_producer ${PROJECT_SOURCE_DIR}/examples/example_producer.cpp)
+    add_dependencies(example_producer librdkafka)
+    target_link_libraries (example_producer HazdevBroker)
+    target_link_libraries (example_producer ${KAFKA_C_LIB})
+    target_link_libraries (example_producer ${KAFKA_CPP_LIB})
+    install(TARGETS example_producer DESTINATION examples)
+    install(FILES ${PROJECT_SOURCE_DIR}/examples/producer.config DESTINATION examples)
 endif ()
 
-#----- DOCUMENTATION ----- #
-find_package(Doxygen)
-option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ${DOXYGEN_FOUND})
+# ----- DOCUMENTATION ----- #
+option(GENERATE_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
 
-if(BUILD_DOCUMENTATION)
+if(GENERATE_DOCUMENTATION)
 
-     if(DOXYGEN_FOUND)
-         set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
-         set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+    # ----- LOOK FOR DOXYGEN ----- #
+    find_package(Doxygen REQUIRED)
 
-        configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+    set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+    set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-        add_custom_target(doc
-            COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            COMMENT "Generating API documentation with Doxygen"
-            VERBATIM)
+    configure_file(${doxyfile_in} ${doxyfile} @ONLY)
 
-        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION doc)
-    endif()
+    add_custom_target(doc ALL
+        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM)
+
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION doc)
+
 endif()
 
-# ----- INSTALL ----- #
-install(TARGETS hazdev-broker DESTINATION lib)
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include DESTINATION ".")
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/../lib/rapidjson DESTINATION "include")
+# ----- INSTALL RULES ----- #
+# Layout. This works for all platforms:
+#   * <prefix>/lib/<PROJECT-NAME>
+#   * <prefix>/lib/
+#   * <prefix>/include/
+set(config_install_dir "lib/${PROJECT_NAME}")
+set(include_install_dir "include")
+
+set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+
+# ----- Configuration ----- #
+set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
+set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
+set(targets_export_name "${PROJECT_NAME}Targets")
+set(namespace "${PROJECT_NAME}::")
+
+# Include module with function 'write_basic_package_version_file'
+include(CMakePackageConfigHelpers)
+
+# Configure '<PROJECT-NAME>ConfigVersion.cmake'
+# Note: PROJECT_VERSION is used as a VERSION
+write_basic_package_version_file(
+    "${version_config}" COMPATIBILITY SameMajorVersion
+)
+
+# Configure '<PROJECT-NAME>Config.cmake'
+# Use variables:
+#   * targets_export_name
+#   * PROJECT_NAME
+configure_package_config_file(
+    "Config.cmake.in"
+    "${project_config}"
+    INSTALL_DESTINATION "${config_install_dir}"
+)
+
+# Targets:
+#   * <prefix>/lib/libHazdevBroker.a
+#   * header location after install: <prefix>/include/*.h
+install(
+    TARGETS HazdevBroker
+    EXPORT "${targets_export_name}"
+    LIBRARY DESTINATION "lib"
+    ARCHIVE DESTINATION "lib"
+    RUNTIME DESTINATION "bin"
+    INCLUDES DESTINATION "${include_install_dir}"
+)
+
+# Headers:
+#   * *.h-> <prefix>/include/*.h
+install(
+    FILES ${HDRS}
+    DESTINATION "${include_install_dir}/${PROJECT_NAME}"
+)
+
+# rapidjson
+install(
+    DIRECTORY ${PROJECT_SOURCE_DIR}/../lib/rapidjson
+    DESTINATION "${include_install_dir}"
+)
+
+# Export headers:
+#   * ${CMAKE_CURRENT_BINARY_DIR}/HazdevBroker_export.h -> <prefix>/include/HazdevBroker_export.h
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/HazdevBroker_export.h"
+    DESTINATION "${include_install_dir}"
+)
+
+# Config
+#   * <prefix>/lib/HazdevBroker/HazdevBrokerConfig.cmake
+#   * <prefix>/lib/HazdevBroker/HazdevBrokerConfigVersion.cmake
+install(
+    FILES "${project_config}" "${version_config}"
+    DESTINATION "${config_install_dir}"
+)
+
+# Config
+#   * <prefix>/lib/HazdevBroker/HazdevBrokerTargets.cmake
+install(
+    EXPORT "${targets_export_name}"
+    NAMESPACE "${namespace}"
+    DESTINATION "${config_install_dir}"
+)

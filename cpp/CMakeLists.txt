@@ -30,48 +30,29 @@ configure_file (
 
 # ----- EXTERNAL LIBRARIES ----- #
 # librdkafka
-if (WIN32)
-    ExternalProject_Add(
-        librdkafka
-        GIT_REPOSITORY https://github.com/edenhill/librdkafka
-        #GIT_TAG v0.9.2
-        DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/../lib/librdkafka/
-        BUILD_COMMAND win32/build.bat
-        BUILD_IN_SOURCE 1
-        #INSTALL_COMMAND make install
-    )
+set(LIBRDKAFKA_PATH "${CURRENT_SOURCE_DIR}/../../rdkafka/" CACHE PATH "Path to the rdkafka library")
+find_library(LIBRDKAFKA_CPP_LIB
+    ${LIBRDKAFKA_PATH}/win32/x64/Release/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}
+    HINTS "${LIBRDKAFKA_PATH}/lib"
+)
 
-    SET(KAFKA_C_INC ${PROJECT_SOURCE_DIR}/../lib/librdkafka/src)
-    set (KAFKA_C_LIB "${KAFKA_C_INC}/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}")
+# check to see if we found it
+if (LIBRDKAFKA_CPP_LIB STREQUAL "LIBRDKAFKA_CPP_LIB-NOTFOUND")
+    message (FATAL_ERROR "Couldn't find the librdkafka library")
+else ()
+    # Setup includes
+    set(LIBKAFKA_C_INC ${LIBRDKAFKA_PATH}/src)
+    set(LIBKAFKA_CPP_INC ${LIBRDKAFKA_PATH}/src-cpp)
+endif ()
 
-    SET(KAFKA_CPP_INC ${PROJECT_SOURCE_DIR}/../lib/librdkafka/src-cpp)
-    set (KAFKA_CPP_LIB "${KAFKA_CPP_INC}/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}")
-else()
-    ExternalProject_Add(
-        librdkafka
-        GIT_REPOSITORY https://github.com/edenhill/librdkafka.git
-        #GIT_TAG v0.9.2
-        DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/../lib/librdkafka/
-        CONFIGURE_COMMAND ./configure --prefix=${CMAKE_INSTALL_PREFIX}
-        BUILD_COMMAND make
-        BUILD_IN_SOURCE 1
-        INSTALL_COMMAND make install
-    )
-
-    SET(KAFKA_C_INC ${PROJECT_SOURCE_DIR}/../lib/librdkafka/src)
-    set (KAFKA_C_LIB "${KAFKA_C_INC}/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}")
-
-    SET(KAFKA_CPP_INC ${PROJECT_SOURCE_DIR}/../lib/librdkafka/src-cpp)
-    set (KAFKA_CPP_LIB "${KAFKA_CPP_INC}/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}")
-endif(WIN32)
 
 # ----- SET INCLUDE DIRECTORIES ----- #
 include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/../lib)
 include_directories(${PROJECT_SOURCE_DIR}/../lib/rapidjson)
-include_directories(${KAFKA_C_INC})
-include_directories(${KAFKA_CPP_INC})
+include_directories(${LIBKAFKA_C_INC})
+include_directories(${LIBKAFKA_CPP_INC})
 
 # ----- SET SOURCE FILES ----- #
 file(GLOB SRCS ${PROJECT_SOURCE_DIR}/src/*.cpp)
@@ -103,17 +84,13 @@ if (BUILD_EXAMPLES)
 
     # ----- CREATE EXECUTABLES ----- #
     add_executable (example_consumer ${PROJECT_SOURCE_DIR}/examples/example_consumer.cpp)
-    add_dependencies(example_consumer librdkafka)
     target_link_libraries (example_consumer HazdevBroker)
-    target_link_libraries (example_consumer ${KAFKA_C_LIB})
     target_link_libraries (example_consumer ${KAFKA_CPP_LIB})
     install(TARGETS example_consumer DESTINATION examples)
     install(FILES ${PROJECT_SOURCE_DIR}/examples/consumer.config DESTINATION examples)
 
     add_executable (example_producer ${PROJECT_SOURCE_DIR}/examples/example_producer.cpp)
-    add_dependencies(example_producer librdkafka)
     target_link_libraries (example_producer HazdevBroker)
-    target_link_libraries (example_producer ${KAFKA_C_LIB})
     target_link_libraries (example_producer ${KAFKA_CPP_LIB})
     install(TARGETS example_producer DESTINATION examples)
     install(FILES ${PROJECT_SOURCE_DIR}/examples/producer.config DESTINATION examples)

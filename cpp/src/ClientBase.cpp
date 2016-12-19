@@ -89,7 +89,8 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 			++itr) {
 		if (conf->set(itr->name.GetString(), itr->value.GetString(), errstr)
 				!= RdKafka::Conf::CONF_OK) {
-			log("Error setting configuration entry: " + errstr);
+			log("Error setting configuration entry: " + itr->name.GetString() +
+				" value: " itr->value.GetString() + " error: " + errstr);
 			return (NULL);
 		}
 
@@ -140,7 +141,8 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 				itr != topicPropertiesObject.MemberEnd(); ++itr) {
 			if (tconf->set(itr->name.GetString(), itr->value.GetString(),
 					errstr) != RdKafka::Conf::CONF_OK) {
-				log("Error setting topic configuration entry: " + errstr);
+				log("Error setting topic configuration entry: " + itr->name.GetString() +
+					" value: " itr->value.GetString() + " error: " + errstr);
 				return (NULL);
 			}
 		}

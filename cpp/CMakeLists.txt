@@ -61,12 +61,15 @@ else ()
     set (EXAMPLE_LIBS ${EXAMPLE_LIBS} ${LIBRDKAFKA_CPP_LIB})
 endif ()
 
+# rapidjson
+set(RAPIDJSON_PATH "${CURRENT_SOURCE_DIR}/../lib/rapidjson" CACHE PATH "Path to rapidjson")
+
 
 # ----- SET INCLUDE DIRECTORIES ----- #
 include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${PROJECT_SOURCE_DIR}/../lib)
-include_directories(${PROJECT_SOURCE_DIR}/../lib/rapidjson)
+include_directories(${RAPIDJSON_PATH}/..)
+include_directories(${RAPIDJSON_PATH})
 include_directories(${LIBKAFKA_C_INC})
 include_directories(${LIBKAFKA_CPP_INC})
 
@@ -103,15 +106,11 @@ if (BUILD_EXAMPLES)
     # ----- CREATE EXECUTABLES ----- #
     add_executable (example_consumer ${PROJECT_SOURCE_DIR}/examples/example_consumer.cpp)
     target_link_libraries (example_consumer ${EXAMPLE_LIBS})
-    #target_link_libraries (example_consumer ${KAFKA_C_LIB})
-    #target_link_libraries (example_consumer ${KAFKA_CPP_LIB})
     install(TARGETS example_consumer DESTINATION examples)
     install(FILES ${PROJECT_SOURCE_DIR}/examples/consumer.config DESTINATION examples)
 
     add_executable (example_producer ${PROJECT_SOURCE_DIR}/examples/example_producer.cpp)
     target_link_libraries (example_producer ${EXAMPLE_LIBS})
-    #target_link_libraries (example_producer ${KAFKA_C_LIB})
-    #target_link_libraries (example_producer ${KAFKA_CPP_LIB})
     install(TARGETS example_producer DESTINATION examples)
     install(FILES ${PROJECT_SOURCE_DIR}/examples/producer.config DESTINATION examples)
 endif ()

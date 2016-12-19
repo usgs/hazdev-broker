@@ -194,7 +194,7 @@ install(
 
 # rapidjson
 install(
-    DIRECTORY ${PROJECT_SOURCE_DIR}/../lib/rapidjson
+    DIRECTORY ${RAPIDJSON_PATH}
     DESTINATION "${include_install_dir}"
 )
 

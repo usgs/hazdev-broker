@@ -61,5 +61,43 @@ window, run the command `java -jar ExampleConsumer.jar consumer.config`. The
 example defaults to using the Kafka Docker image on localhost (edit the
 `bootstrap.servers` in  the consumer.config if this is not true).
 
-Type messages into the producer client window, and observe the messages reported
-in the consumer client window.
+Type messages into the example producer window, and observe the messages reported
+in the example consumer window.
+
+Consumer client
+-----
+
+The Hazdev-Broker Jar includes a file based consumer client that consumes text
+messages from one or more given Kafka Topics, and writes them out as files with
+a given extension at a given location.
+
+**Configuration**
+
+An [example consumer client configuration file](config/consumerclient/consumerclient.config)
+is provided with the Hazdev-Broker Jar.  Important configuration entries are
+as follows:
+
+Required Configuration:
+* FileExtension - Specifies the file extension to use.
+* OutputDirectory - Specifies the output directory to use.
+* HazdevBrokerConfig - Specifies the Hazdev-Broker configuration to connect to
+the Kafka server.
+* TopicList - Specifies one or more topics to listen to on the Kafka server.
+
+Optional Configuration:
+* MessagesPerFile - Specifies the maximum number of messages per file, unless
+TimePerFile is specified, the default is 1 message per file.
+* TimePerFile - Specifies the maximum amount of time in seconds to wait before
+writing a file if there are unwritten messages. This option is disabled by
+default.
+* Log4JConfigFile - Specifies a log4j properties file to use.
+
+**Logging**
+
+The consumer client uses log4j for logging, an [example log4j properties file](config/consumerclient/consumerclient.log4j.properties)
+is included with the Hazdev-Broker Jar.  For more information on configuring
+log4j, see [here](http://logging.apache.org/log4j/1.2/manual.html).
+
+**Using**
+
+To run the consumer client, run the command `java -jar hazdev-broker.jar consumerclient.config`.

@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
-import gov.usgs.hazdevbroker.Producer;
+import gov.usgs.hazdevbroker.Consumer;
 
 import java.util.*;
 import java.io.BufferedReader;
@@ -19,18 +19,18 @@ import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-public class ExampleProducer {
+public class ExampleConsumer {
 
 	public static final String BROKER_CONFIG = "HazdevBrokerConfig";
-	public static final String TOPIC = "Topic";
+	public static final String TOPIC_LIST = "TopicList";
 
 	public static void main(String[] args) {
 
 		if (args.length == 0) {
-			System.out.println("Usage: ExampleProducer <configfile>  <optional logging configuration file>");
+			System.out.println("Usage: ExampleConsumer <configfile> <optional logging configuration file>");
 			System.exit(1);
 		}
-		
+
 		String configFileName = args[0];
 
 		// init log4j
@@ -41,7 +41,7 @@ public class ExampleProducer {
 			System.out.println("Using custom logging configuration");
 			PropertyConfigurator.configure(args[1]);
 		}
-		
+
 		// read the config file
 		File configFile = new File(configFileName);
 		BufferedReader configReader = null;
@@ -93,26 +93,46 @@ public class ExampleProducer {
 			System.exit(1);
 		}
 
-		// get topic
-		String topic = "";
-		if (configJSON.containsKey(TOPIC)) {
-			topic = (String) configJSON.get(TOPIC);
+		// get topic list
+		ArrayList<String> topicList = null;
+		if (configJSON.containsKey(TOPIC_LIST)) {
+			topicList = new ArrayList<String>();
+			JSONArray topicArray = (JSONArray) configJSON.get(TOPIC_LIST);
+			// convert to string collection
+			for (int i = 0; i < topicArray.size(); i++) {
+
+				// get the String
+				String topic = (String) topicArray.get(i);
+				topicList.add(topic);
+			}
 		} else {
-			System.out.println("Error, did not find Topic in configuration.");
+			System.out
+					.println("Error, did not find TopicList in configuration.");
 			System.exit(1);
 		}
 
-		// create producer
-		Producer m_Producer = new Producer(brokerConfig);
+		// nullcheck
+		if (topicList == null) {
+			System.out.println("Error, invalid TopicList from configuration.");
+			System.exit(1);
+		}
+
+		// create consumer
+		Consumer m_Consumer = new Consumer(brokerConfig);
+
+		// subscribe to topics
+		m_Consumer.subscribe(topicList);
 
 		// run until stopped
 		while (true) {
 
-			// get message to send
-			String message = System.console().readLine();
+			// get message from broker
+			ArrayList<String> brokerMessages = m_Consumer.pollString(100);
 
-			// send message
-			m_Producer.sendString(topic, message);
+			// print messages
+			for (int i = 0; i < brokerMessages.size(); i++) {
+				System.out.println(brokerMessages.get(i));
+			}
 		}
 	}
 }

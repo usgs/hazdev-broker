@@ -5,15 +5,14 @@ set(VERSION_MAJOR   0)
 set(VERSION_MINOR   1)
 set(VERSION_PATCH   0)
 
-# ----- OVERRIDE TO SET STATIC RUNTIME ON MSVC ----- #
-set(CMAKE_USER_MAKE_RULES_OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/c_flag_overrides.cmake)
-set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cxx_flag_overrides.cmake)
-
 # ----- PROJECT ----- #
 project (HazdevBroker VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 # ----- CMAKE INCLUDES ----- #
 include(ExternalProject)
+include(internal_utils.cmake)
+
+fix_default_compiler_settings()  # Defined in internal_utils.cmake.
 
 # ----- SET FOR C++14 STANDARD ----- #
 if (NOT MSVC)

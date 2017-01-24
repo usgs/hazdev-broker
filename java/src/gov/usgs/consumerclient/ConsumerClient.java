@@ -332,7 +332,13 @@ public class ConsumerClient {
 				// get the next message to write
 				String messageString = fileQueue.remove();
 
-				// messages are null terminated, so just call print
+				// check to see if we were newline terminated, add a newline
+				// if we were not
+				if (messageString.charAt(messageString.length()-1) != '\n') {
+					messageString = messageString.concat("\n");
+				}
+
+				// just call print
 				fileWriter.print(messageString);
 			}
 

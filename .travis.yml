@@ -12,7 +12,7 @@ addons:
       - clang-3.7
       - g++-5
       - gcc-5
-      - cmake-3.4
+      - cmake
     sources:
       - llvm-toolchain-precise
       - ubuntu-toolchain-r-test

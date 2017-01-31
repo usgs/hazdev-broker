@@ -41,6 +41,7 @@ install:
         if ! brew ls --version cmake &>/dev/null; then brew install cmake; fi
       fi    
 script: 
+  - cd ..
   - cd java
   - ant
   - cd ..

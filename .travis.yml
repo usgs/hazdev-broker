@@ -1,10 +1,9 @@
-# travis file for java and c++, does not include gtest or doxygen.
-language: java 
+language: java
+sudo: false
 
 jdk:
   - oraclejdk7
 
-sudo: false
 # add modern c++
 addons:
   apt:

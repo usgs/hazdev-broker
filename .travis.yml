@@ -12,16 +12,15 @@ addons:
       - clang-3.7
       - g++-5
       - gcc-5
+      - cmake
     sources:
       - llvm-toolchain-precise
       - ubuntu-toolchain-r-test
+      - kalakris-cmake
 
 # before_install
 # add modern cmake
-install:
-    - CMAKE_URL="http://www.cmake.org/files/v3.5/cmake-3.5.2-Linux-x86_64.tar.gz"
-    - mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
-    - export PATH=${DEPS_DIR}/cmake/bin:${PATH}      
+install: 
     - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
     - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi      
 script: 

@@ -1,0 +1,17 @@
+# travis file for java and c++, does not include gtest or doxygen.
+language: java
+
+jdk:
+  - oraclejdk7
+
+# before_install
+# install
+
+script: 
+  - cd java
+  - ant
+  - cd ..
+  - cd cpp
+  - mkdir build
+  - cd build
+  - cmake .. && make

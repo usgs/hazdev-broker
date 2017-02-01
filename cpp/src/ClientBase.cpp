@@ -1,4 +1,5 @@
 #include "ClientBase.h"
+#include "rdkafkacpp.h"
 #include <limits>
 
 // JSON Keys

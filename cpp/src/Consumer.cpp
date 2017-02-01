@@ -1,4 +1,5 @@
 #include "Consumer.h"
+#include "rdkafkacpp.h"
 #include <limits>
 
 // Define configuration type

@@ -33,32 +33,6 @@ set(LIBRDKAFKA_PATH "${CURRENT_SOURCE_DIR}/../../rdkafka/" CACHE PATH "Path to t
 set(LIBKAFKA_C_INC ${LIBRDKAFKA_PATH}/src)
 set(LIBKAFKA_CPP_INC ${LIBRDKAFKA_PATH}/src-cpp)
 
-# look for the c lib
-find_library(LIBRDKAFKA_C_LIB
-    NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}
-    PATHS ${LIBRDKAFKA_PATH}/src
-)
-
-# check to see if we found it
-if (LIBRDKAFKA_C_LIB STREQUAL "LIBRDKAFKA_C_LIB-NOTFOUND")
-    message (FATAL_ERROR "Couldn't find the librdkafka c library")
-else ()
-    set (EXAMPLE_LIBS ${EXAMPLE_LIBS} ${LIBRDKAFKA_C_LIB})
-endif ()
-
-# look for the cpp lib
-find_library(LIBRDKAFKA_CPP_LIB
-    NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}
-    PATHS ${LIBRDKAFKA_PATH}/src-cpp
-)
-
-# check to see if we found it
-if (LIBRDKAFKA_CPP_LIB STREQUAL "LIBRDKAFKA_CPP_LIB-NOTFOUND")
-    message (FATAL_ERROR "Couldn't find the librdkafka cpp library")
-else ()
-    set (EXAMPLE_LIBS ${EXAMPLE_LIBS} ${LIBRDKAFKA_CPP_LIB})
-endif ()
-
 # rapidjson
 set(RAPIDJSON_PATH "${CURRENT_SOURCE_DIR}/../lib/rapidjson" CACHE PATH "Path to rapidjson")
 
@@ -97,6 +71,34 @@ set_target_properties(HazdevBroker PROPERTIES
 # ----- CREATE EXAMPLES ----- #
 option(BUILD_EXAMPLES "Build examples." OFF)
 if (BUILD_EXAMPLES)
+
+    # look for the kafka c lib
+    find_library(LIBRDKAFKA_C_LIB
+        NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}
+        PATHS ${LIBRDKAFKA_PATH}/src
+    )
+
+    # check to see if we found it
+    if (LIBRDKAFKA_C_LIB STREQUAL "LIBRDKAFKA_C_LIB-NOTFOUND")
+        message (FATAL_ERROR "Couldn't find the librdkafka c library")
+    else ()
+        set (EXAMPLE_LIBS ${EXAMPLE_LIBS} ${LIBRDKAFKA_C_LIB})
+    endif ()
+
+    # look for the kafka cpp lib
+    find_library(LIBRDKAFKA_CPP_LIB
+        NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}
+        PATHS ${LIBRDKAFKA_PATH}/src-cpp
+    )
+
+    # check to see if we found it
+    if (LIBRDKAFKA_CPP_LIB STREQUAL "LIBRDKAFKA_CPP_LIB-NOTFOUND")
+        message (FATAL_ERROR "Couldn't find the librdkafka cpp library")
+    else ()
+        set (EXAMPLE_LIBS ${EXAMPLE_LIBS} ${LIBRDKAFKA_CPP_LIB})
+    endif ()
+
+
     set (EXAMPLE_LIBS ${EXAMPLE_LIBS} HazdevBroker)
 
     # ----- CREATE EXECUTABLES ----- #

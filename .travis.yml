@@ -46,4 +46,4 @@ script:
   - cd ${TRAVIS_BUILD_DIR}/cpp
   - mkdir build
   - cd build
-  - cmake -DRAPIDJSON_PATH=../../lib/rapidjson -DLIBRDKAFKA_PATH .. && make
+  - cmake -DRAPIDJSON_PATH=../../lib/rapidjson -DLIBRDKAFKA_PATH=${DEPS_DIR}/librdkafka .. && make

@@ -30,9 +30,12 @@ configure_file (
 # ----- EXTERNAL LIBRARIES ----- #
 # librdkafka
 set(LIBRDKAFKA_PATH "${CURRENT_SOURCE_DIR}/../../rdkafka/" CACHE PATH "Path to the rdkafka library")
+set(LIBKAFKA_C_INC ${LIBRDKAFKA_PATH}/src)
+set(LIBKAFKA_CPP_INC ${LIBRDKAFKA_PATH}/src-cpp)
+
 # look for the c lib
 find_library(LIBRDKAFKA_C_LIB
-    ${LIBRDKAFKA_PATH}/win32/x64/Release/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${LIBRDKAFKA_PATH}/src/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}
     HINTS "${LIBRDKAFKA_PATH}/lib"
 )
 
@@ -40,14 +43,12 @@ find_library(LIBRDKAFKA_C_LIB
 if (LIBRDKAFKA_C_LIB STREQUAL "LIBRDKAFKA_C_LIB-NOTFOUND")
     message (FATAL_ERROR "Couldn't find the librdkafka c library")
 else ()
-    # Setup includes
-    set(LIBKAFKA_C_INC ${LIBRDKAFKA_PATH}/src)
     set (EXAMPLE_LIBS ${EXAMPLE_LIBS} ${LIBRDKAFKA_C_LIB})
 endif ()
 
 # look for the cpp lib
 find_library(LIBRDKAFKA_CPP_LIB
-    ${LIBRDKAFKA_PATH}/win32/x64/Release/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${LIBRDKAFKA_PATH}/src-cpp/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}
     HINTS "${LIBRDKAFKA_PATH}/lib"
 )
 
@@ -55,14 +56,11 @@ find_library(LIBRDKAFKA_CPP_LIB
 if (LIBRDKAFKA_CPP_LIB STREQUAL "LIBRDKAFKA_CPP_LIB-NOTFOUND")
     message (FATAL_ERROR "Couldn't find the librdkafka cpp library")
 else ()
-    # Setup includes
-    set(LIBKAFKA_CPP_INC ${LIBRDKAFKA_PATH}/src-cpp)
     set (EXAMPLE_LIBS ${EXAMPLE_LIBS} ${LIBRDKAFKA_CPP_LIB})
 endif ()
 
 # rapidjson
 set(RAPIDJSON_PATH "${CURRENT_SOURCE_DIR}/../lib/rapidjson" CACHE PATH "Path to rapidjson")
-
 
 # ----- SET INCLUDE DIRECTORIES ----- #
 include_directories(${PROJECT_BINARY_DIR})
@@ -100,7 +98,6 @@ set_target_properties(HazdevBroker PROPERTIES
 option(BUILD_EXAMPLES "Build examples." OFF)
 if (BUILD_EXAMPLES)
     set (EXAMPLE_LIBS ${EXAMPLE_LIBS} HazdevBroker)
-
 
     # ----- CREATE EXECUTABLES ----- #
     add_executable (example_consumer ${PROJECT_SOURCE_DIR}/examples/example_consumer.cpp)

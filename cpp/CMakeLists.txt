@@ -103,12 +103,16 @@ if (BUILD_EXAMPLES)
 
     # ----- CREATE EXECUTABLES ----- #
     add_executable (example_consumer ${PROJECT_SOURCE_DIR}/examples/example_consumer.cpp)
-    target_link_libraries (example_consumer ${EXAMPLE_LIBS})
+    target_link_libraries(example_consumer ${LIBRDKAFKA_C_LIB})
+    target_link_libraries(example_consumer ${LIBRDKAFKA_CPP_LIB})
+    target_link_libraries(example_consumer HazdevBroker)
     install(TARGETS example_consumer DESTINATION examples)
     install(FILES ${PROJECT_SOURCE_DIR}/examples/consumer.config DESTINATION examples)
 
     add_executable (example_producer ${PROJECT_SOURCE_DIR}/examples/example_producer.cpp)
-    target_link_libraries (example_producer ${EXAMPLE_LIBS})
+    target_link_libraries(example_producer ${LIBRDKAFKA_C_LIB})
+    target_link_libraries(example_producer ${LIBRDKAFKA_CPP_LIB})
+    target_link_libraries(example_producer HazdevBroker)
     install(TARGETS example_producer DESTINATION examples)
     install(FILES ${PROJECT_SOURCE_DIR}/examples/producer.config DESTINATION examples)
 endif ()

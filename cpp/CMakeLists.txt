@@ -35,8 +35,8 @@ set(LIBKAFKA_CPP_INC ${LIBRDKAFKA_PATH}/src-cpp)
 
 # look for the c lib
 find_library(LIBRDKAFKA_C_LIB
-    ${LIBRDKAFKA_PATH}/src/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}
-    HINTS "${LIBRDKAFKA_PATH}/lib"
+    NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}
+    PATHS ${LIBRDKAFKA_PATH}/src
 )
 
 # check to see if we found it
@@ -48,8 +48,8 @@ endif ()
 
 # look for the cpp lib
 find_library(LIBRDKAFKA_CPP_LIB
-    ${LIBRDKAFKA_PATH}/src-cpp/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}
-    HINTS "${LIBRDKAFKA_PATH}/lib"
+    NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}
+    PATHS ${LIBRDKAFKA_PATH}/src-cpp
 )
 
 # check to see if we found it

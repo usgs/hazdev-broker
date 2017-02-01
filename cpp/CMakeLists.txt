@@ -97,17 +97,19 @@ if (BUILD_EXAMPLES)
     endif ()
 
     # ----- CREATE EXECUTABLES ----- #
+    # NOTE: Order libraries are linked matters for G++
     add_executable (example_consumer ${PROJECT_SOURCE_DIR}/examples/example_consumer.cpp)
     target_link_libraries(example_consumer HazdevBroker)
-    target_link_libraries(example_consumer ${LIBRDKAFKA_C_LIB})
     target_link_libraries(example_consumer ${LIBRDKAFKA_CPP_LIB})
+    target_link_libraries(example_consumer ${LIBRDKAFKA_C_LIB})
+
     install(TARGETS example_consumer DESTINATION examples)
     install(FILES ${PROJECT_SOURCE_DIR}/examples/consumer.config DESTINATION examples)
 
     add_executable (example_producer ${PROJECT_SOURCE_DIR}/examples/example_producer.cpp)
     target_link_libraries(example_producer HazdevBroker)
-    target_link_libraries(example_producer ${LIBRDKAFKA_C_LIB})
     target_link_libraries(example_producer ${LIBRDKAFKA_CPP_LIB})
+    target_link_libraries(example_producer ${LIBRDKAFKA_C_LIB})
 
     install(TARGETS example_producer DESTINATION examples)
     install(FILES ${PROJECT_SOURCE_DIR}/examples/producer.config DESTINATION examples)

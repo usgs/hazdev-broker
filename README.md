@@ -1,4 +1,7 @@
 # hazdev-broker
+
+[![Build Status](https://travis-ci.org/usgs/hazdev-broker.svg?branch=master)](https://travis-ci.org/usgs/hazdev-broker)
+
 Small Rapid Data Distribution via a Message Broker
 
 The US Geological Survey (USGS) National Earthquake Information Center (NEIC)

@@ -30,39 +30,11 @@ configure_file (
 # ----- EXTERNAL LIBRARIES ----- #
 # librdkafka
 set(LIBRDKAFKA_PATH "${CURRENT_SOURCE_DIR}/../../rdkafka/" CACHE PATH "Path to the rdkafka library")
-# look for the c lib
-find_library(LIBRDKAFKA_C_LIB
-    ${LIBRDKAFKA_PATH}/win32/x64/Release/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}
-    HINTS "${LIBRDKAFKA_PATH}/lib"
-)
-
-# check to see if we found it
-if (LIBRDKAFKA_C_LIB STREQUAL "LIBRDKAFKA_C_LIB-NOTFOUND")
-    message (FATAL_ERROR "Couldn't find the librdkafka c library")
-else ()
-    # Setup includes
-    set(LIBKAFKA_C_INC ${LIBRDKAFKA_PATH}/src)
-    set (EXAMPLE_LIBS ${EXAMPLE_LIBS} ${LIBRDKAFKA_C_LIB})
-endif ()
-
-# look for the cpp lib
-find_library(LIBRDKAFKA_CPP_LIB
-    ${LIBRDKAFKA_PATH}/win32/x64/Release/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}
-    HINTS "${LIBRDKAFKA_PATH}/lib"
-)
-
-# check to see if we found it
-if (LIBRDKAFKA_CPP_LIB STREQUAL "LIBRDKAFKA_CPP_LIB-NOTFOUND")
-    message (FATAL_ERROR "Couldn't find the librdkafka cpp library")
-else ()
-    # Setup includes
-    set(LIBKAFKA_CPP_INC ${LIBRDKAFKA_PATH}/src-cpp)
-    set (EXAMPLE_LIBS ${EXAMPLE_LIBS} ${LIBRDKAFKA_CPP_LIB})
-endif ()
+set(LIBKAFKA_C_INC ${LIBRDKAFKA_PATH}/src)
+set(LIBKAFKA_CPP_INC ${LIBRDKAFKA_PATH}/src-cpp)
 
 # rapidjson
 set(RAPIDJSON_PATH "${CURRENT_SOURCE_DIR}/../lib/rapidjson" CACHE PATH "Path to rapidjson")
-
 
 # ----- SET INCLUDE DIRECTORIES ----- #
 include_directories(${PROJECT_BINARY_DIR})
@@ -99,17 +71,46 @@ set_target_properties(HazdevBroker PROPERTIES
 # ----- CREATE EXAMPLES ----- #
 option(BUILD_EXAMPLES "Build examples." OFF)
 if (BUILD_EXAMPLES)
-    set (EXAMPLE_LIBS ${EXAMPLE_LIBS} HazdevBroker)
 
+    # look for the kafka c lib
+    find_library(LIBRDKAFKA_C_LIB
+        NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}
+        PATHS ${LIBRDKAFKA_PATH}/src
+    )
+    # check to see if we found it
+    if (LIBRDKAFKA_C_LIB STREQUAL "LIBRDKAFKA_C_LIB-NOTFOUND")
+        message (FATAL_ERROR "Couldn't find the librdkafka c library")
+        else ()
+            MESSAGE(STATUS "LIBRDKAFKA_C_LIB: " ${LIBRDKAFKA_C_LIB})
+        endif ()
+
+    # look for the kafka cpp lib
+    find_library(LIBRDKAFKA_CPP_LIB
+        NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}
+        PATHS ${LIBRDKAFKA_PATH}/src-cpp
+    )
+    # check to see if we found it
+    if (LIBRDKAFKA_CPP_LIB STREQUAL "LIBRDKAFKA_CPP_LIB-NOTFOUND")
+        message (FATAL_ERROR "Couldn't find the librdkafka cpp library")
+    else ()
+        MESSAGE(STATUS "LIBRDKAFKA_CPP_LIB: " ${LIBRDKAFKA_CPP_LIB})
+    endif ()
 
     # ----- CREATE EXECUTABLES ----- #
+    # NOTE: Order libraries are linked matters for G++
     add_executable (example_consumer ${PROJECT_SOURCE_DIR}/examples/example_consumer.cpp)
-    target_link_libraries (example_consumer ${EXAMPLE_LIBS})
+    target_link_libraries(example_consumer HazdevBroker)
+    target_link_libraries(example_consumer ${LIBRDKAFKA_CPP_LIB})
+    target_link_libraries(example_consumer ${LIBRDKAFKA_C_LIB})
+
     install(TARGETS example_consumer DESTINATION examples)
     install(FILES ${PROJECT_SOURCE_DIR}/examples/consumer.config DESTINATION examples)
 
     add_executable (example_producer ${PROJECT_SOURCE_DIR}/examples/example_producer.cpp)
-    target_link_libraries (example_producer ${EXAMPLE_LIBS})
+    target_link_libraries(example_producer HazdevBroker)
+    target_link_libraries(example_producer ${LIBRDKAFKA_CPP_LIB})
+    target_link_libraries(example_producer ${LIBRDKAFKA_C_LIB})
+
     install(TARGETS example_producer DESTINATION examples)
     install(FILES ${PROJECT_SOURCE_DIR}/examples/producer.config DESTINATION examples)
 endif ()

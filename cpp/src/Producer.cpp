@@ -1,4 +1,5 @@
 #include "Producer.h"
+#include "rdkafkacpp.h"
 
 // Define configuration type
 #define CONFIGTYPE_STRING "ProducerConfig"

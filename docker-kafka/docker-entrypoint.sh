@@ -19,6 +19,14 @@ KAFKA_ADVERTISED_HOST_NAME=${KAFKA_ADVERTISED_HOST_NAME:-`hostname`}
     &
 zookeeper=$!
 
+
+until timeout 1 bash -c "echo > /dev/tcp/localhost/2181"
+do
+	echo "waiting for zookeeper"
+	sleep 1
+done
+
+
 # start kafka
 /kafka/bin/kafka-server-start.sh \
     /kafka/config/server.properties \

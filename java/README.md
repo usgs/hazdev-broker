@@ -74,8 +74,8 @@ a given extension at a given location.
 **Configuration**
 
 An [example consumer client configuration file](config/consumerclient/consumerclient.config)
-is provided with the Hazdev-Broker Jar.  Important configuration entries are
-as follows:
+is provided with the Hazdev-Broker Jar.  Important consumer configuration
+entries are as follows:
 
 Required Configuration:
 * FileExtension - Specifies the file extension to use.
@@ -90,7 +90,26 @@ TimePerFile is specified, the default is 1 message per file.
 * TimePerFile - Specifies the maximum amount of time in seconds to wait before
 writing a file if there are unwritten messages. This option is disabled by
 default.
-* Log4JConfigFile - Specifies a log4j properties file to use.
+* FileName - Specifies a file name to use when generating output files.
+* Log4JConfigFile - Specifies a log4j properties file to use for logging.
+
+An [example producer client configuration file](config/producerclient/producerclient.config)
+is provided with the Hazdev-Broker Jar.  Important producer configuration
+entries are as follows:
+
+Required Configuration:
+* FileExtension - Specifies the file extension to use.
+* InputDirectory - Specifies the output directory to use.
+* HazdevBrokerConfig - Specifies the Hazdev-Broker configuration to connect to
+the Kafka server.
+* Topic - Specifies the topic to write to on the Kafka server.
+
+Optional Configuration:
+* ArchiveDirectory - Specifies the archive directory to use. If not specified,
+input files are deleted once processed.
+* TimePerFile - Specifies the maximum amount of time in seconds to wait between
+processing input files.
+* Log4JConfigFile - Specifies a log4j properties file to use for logging.
 
 **Logging**
 
@@ -100,4 +119,6 @@ log4j, see [here](http://logging.apache.org/log4j/1.2/manual.html).
 
 **Using**
 
-To run the consumer client, run the command `java -jar hazdev-broker.jar consumerclient.config`.
+To run the consumer client, run the command `java -jar hazdev-broker.jar ConsumerClient consumerclient.config`.
+
+To run the producer client, run the command `java -jar hazdev-broker.jar ProducerClient producerclient.config`.

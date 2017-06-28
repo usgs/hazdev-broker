@@ -93,7 +93,8 @@ public class ConsumerClient {
 
 		// check number of arguments
 		if (args.length == 0) {
-			System.out.println("Usage: hazdev-broker <configfile>");
+			System.out.println(
+					"Usage: hazdev-broker ConsumerClient <configfile>");
 			System.exit(1);
 		}
 
@@ -279,7 +280,7 @@ public class ConsumerClient {
 			// check to see if we have anything to write
 			if (fileQueue.isEmpty()) {
 
-				// nothign to do
+				// nothing to do
 				logger.debug("No messages to write.");
 				continue;
 				// check to see if we have enough messages to write

@@ -64,7 +64,7 @@ example defaults to using the Kafka Docker image on localhost (edit the
 Type messages into the example producer window, and observe the messages reported
 in the example consumer window.
 
-Consumer client
+Consumer Client
 -----
 
 The Hazdev-Broker Jar includes a file based consumer client that consumes text
@@ -93,6 +93,25 @@ default.
 * FileName - Specifies a file name to use when generating output files.
 * Log4JConfigFile - Specifies a log4j properties file to use for logging.
 
+**Logging**
+
+The consumer client uses log4j for logging, an [example log4j properties file](config/consumerclient/consumerclient.log4j.properties)
+is included with the Hazdev-Broker Jar.  For more information on configuring
+log4j, see [here](http://logging.apache.org/log4j/1.2/manual.html).
+
+**Using**
+
+To run the consumer client, run the command `java -jar hazdev-broker.jar ConsumerClient consumerclient.config`.
+
+Producer Client
+-----
+
+The Hazdev-Broker Jar includes a file based producer client that inserts text
+messages from one or more files in a given directory, and writes them to a 
+Kafka Topic.
+
+**Configuration**
+
 An [example producer client configuration file](config/producerclient/producerclient.config)
 is provided with the Hazdev-Broker Jar.  Important producer configuration
 entries are as follows:
@@ -113,12 +132,10 @@ processing input files.
 
 **Logging**
 
-The consumer client uses log4j for logging, an [example log4j properties file](config/consumerclient/consumerclient.log4j.properties)
+The producer client uses log4j for logging, an [example log4j properties file](config/producerclient/producerclient.log4j.properties)
 is included with the Hazdev-Broker Jar.  For more information on configuring
 log4j, see [here](http://logging.apache.org/log4j/1.2/manual.html).
 
 **Using**
-
-To run the consumer client, run the command `java -jar hazdev-broker.jar ConsumerClient consumerclient.config`.
 
 To run the producer client, run the command `java -jar hazdev-broker.jar ProducerClient producerclient.config`.

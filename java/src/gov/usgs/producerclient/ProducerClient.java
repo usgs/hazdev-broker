@@ -106,6 +106,7 @@ public class ProducerClient {
 					configReader.close();
 				}
 			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 
@@ -287,7 +288,7 @@ public class ProducerClient {
 
 					// done with the file
 					if (archiveDirectory == null) {
-						
+
 						// not archiving, just delete it
 						inputFile.delete();
 					} else {

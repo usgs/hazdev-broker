@@ -133,6 +133,7 @@ public class ConsumerClient {
 					configReader.close();
 				}
 			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 

@@ -57,16 +57,16 @@ add_library (HazdevBroker STATIC ${SRCS} ${HDRS})
 set_target_properties(HazdevBroker PROPERTIES
     OUTPUT_NAME hazdevbroker)
 
-    # ----- GENERATE ----- #
-    include(GenerateExportHeader)
-    generate_export_header(HazdevBroker)
+# ----- GENERATE ----- #
+include(GenerateExportHeader)
+generate_export_header(HazdevBroker EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/HazdevBroker_export.h)
 
-    # ----- GLOBAL INCLUDES ----- #
-    target_include_directories(
-        HazdevBroker PUBLIC
-        "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
-    )
+# ----- GLOBAL INCLUDES ----- #
+target_include_directories(
+    HazdevBroker PUBLIC
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
+)
 
 # ----- CREATE EXAMPLES ----- #
 option(BUILD_EXAMPLES "Build examples." OFF)

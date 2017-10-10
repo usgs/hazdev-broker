@@ -36,6 +36,7 @@ public class ConsumerClient {
 	public static final String BROKER_CONFIG = "HazdevBrokerConfig";
 	public static final String TOPIC_LIST = "TopicList";
 	public static final String FILE_EXTENSION = "FileExtension";
+	public static final String FILE_NAME = "FileName";
 	public static final String MESSAGES_PER_FILE = "MessagesPerFile";
 	public static final String TIME_PER_FILE = "TimePerFile";
 	public static final String OUTPUT_DIRECTORY = "OutputDirectory";
@@ -49,6 +50,11 @@ public class ConsumerClient {
 	 * Required configuration string defining the output file extension
 	 */
 	private static String fileExtension;
+
+	/**
+	 * Optional configuration string defining the output file name
+	 */
+	private static String fileName;
 
 	/**
 	 * Optional configuration Long defining the number of messages per file,
@@ -87,7 +93,8 @@ public class ConsumerClient {
 
 		// check number of arguments
 		if (args.length == 0) {
-			System.out.println("Usage: hazdev-broker <configfile>");
+			System.out.println(
+					"Usage: hazdev-broker ConsumerClient <configfile>");
 			System.exit(1);
 		}
 
@@ -95,6 +102,7 @@ public class ConsumerClient {
 		fileQueue = new LinkedList<String>();
 		outputDirectory = null;
 		fileExtension = null;
+		fileName = new String();
 		messagesPerFile = (long) 1;
 		timePerFile = null;
 
@@ -125,6 +133,7 @@ public class ConsumerClient {
 					configReader.close();
 				}
 			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 
@@ -162,6 +171,15 @@ public class ConsumerClient {
 		} else {
 			logger.error("Error, did not find FileExtension in configuration.");
 			System.exit(1);
+		}
+
+		// get file name
+		if (configJSON.containsKey(FILE_NAME)) {
+			fileName = (String) configJSON.get(FILE_NAME);
+			logger.info("Using configured fileName of: " + fileName);
+		} else {
+			fileName = "";
+			logger.info("Not using configured fileName.");
 		}
 
 		// get output directory
@@ -263,7 +281,7 @@ public class ConsumerClient {
 			// check to see if we have anything to write
 			if (fileQueue.isEmpty()) {
 
-				// nothign to do
+				// nothing to do
 				logger.debug("No messages to write.");
 				continue;
 				// check to see if we have enough messages to write
@@ -315,12 +333,14 @@ public class ConsumerClient {
 			// get current time in milliseconds
 			Long timeNow = System.currentTimeMillis();
 
-			// build filename from desired output directory, time, and extension
-			String fileName = outputDirectory + "/" + timeNow.toString() + "."
-					+ fileExtension;
+			// build filename from desired output directory, time, optional
+			// name,
+			// and extension
+			String outFileName = outputDirectory + "/" + timeNow.toString()
+					+ fileName + "." + fileExtension;
 
 			// create an UTF-8 formatted printwriter to write to disk
-			PrintWriter fileWriter = new PrintWriter(fileName, "UTF-8");
+			PrintWriter fileWriter = new PrintWriter(outFileName, "UTF-8");
 
 			for (int i = 0; i < numToWrite; i++) {
 
@@ -334,7 +354,7 @@ public class ConsumerClient {
 
 				// check to see if we were newline terminated, add a newline
 				// if we were not
-				if (messageString.charAt(messageString.length()-1) != '\n') {
+				if (messageString.charAt(messageString.length() - 1) != '\n') {
 					messageString = messageString.concat("\n");
 				}
 

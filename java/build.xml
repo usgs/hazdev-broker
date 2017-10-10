@@ -9,6 +9,7 @@
 	<property name="src" location="src" />
 	<property name="exampleConfig" location="config/examples" />
 	<property name="consumerClientConfig" location="config/consumerclient" />
+	<property name="producerClientConfig" location="config/producerclient" />
 	<property name="lib" location="../lib" />
 	<property name="build" location="build" />
 	<property name="dist" location="dist" />
@@ -48,18 +49,20 @@
 		<!-- Build the main jar file -->
 		<jar jarfile="${dist}/hazdev-broker/hazdev-broker.jar" basedir="${build}" excludes="**/*Example*">
 			<manifest>
-				<attribute name="Main-Class" value="gov.usgs.consumerclient.ConsumerClient" />
+				<attribute name="Main-Class" value="gov.usgs.launcher.Launcher" />
 			</manifest>
 
 			<!-- Include dependencies in jar -->
 			<zipgroupfileset refid="classpath.fileset" />
 		</jar>
 
-		<!-- Copy the consumer client configuration file -->
+		<!-- Copy the consumer client configuration files -->
 		<copy file="${consumerClientConfig}/consumerclient.config" todir="${dist}/hazdev-broker"/>
-
-		<!-- Copy the consumer client log4j configuration file -->
 		<copy file="${consumerClientConfig}/consumerclient.log4j.properties" todir="${dist}/hazdev-broker"/>
+
+		<!-- Copy the producer client configuration files -->
+		<copy file="${producerClientConfig}/producerclient.log4j.properties" todir="${dist}/hazdev-broker"/>
+		<copy file="${producerClientConfig}/producerclient.config" todir="${dist}/hazdev-broker"/>
 
 		<!-- Build the zip distribution -->
 		<zip destfile="${dist}/hazdev-broker.zip" basedir="${dist}">

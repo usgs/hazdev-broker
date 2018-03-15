@@ -41,6 +41,7 @@ include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${RAPIDJSON_PATH}/..)
 include_directories(${RAPIDJSON_PATH})
+include_directories(${LIBRDKAFKA_PATH})
 include_directories(${LIBKAFKA_C_INC})
 include_directories(${LIBKAFKA_CPP_INC})
 
@@ -55,7 +56,7 @@ add_library (HazdevBroker STATIC ${SRCS} ${HDRS})
 
 # ----- TARGET PROPERTIES ----- #
 set_target_properties(HazdevBroker PROPERTIES
-    OUTPUT_NAME hazdevbroker)
+    OUTPUT_NAME HazdevBroker)
 
 # ----- GENERATE ----- #
 include(GenerateExportHeader)

@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/Users/jpatton/code/hazdev-broker/lib/kafka-clients-0.10.0.1.jar"/>
+	<classpathentry kind="lib" path="/Users/jpatton/code/hazdev-broker/lib/kafka-clients-1.0.1.jar"/>
 	<classpathentry kind="lib" path="/Users/jpatton/code/hazdev-broker/lib/json-simple-1.1.1.jar"/>
 	<classpathentry kind="lib" path="/Users/jpatton/code/hazdev-broker/lib/slf4j-api-1.7.21.jar"/>
 	<classpathentry kind="lib" path="/Users/jpatton/code/hazdev-broker/lib/slf4j-log4j12-1.7.21.jar"/>

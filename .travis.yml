@@ -36,6 +36,7 @@ install:
       fi
   # unzip and build librdkafka
     - unzip ${TRAVIS_BUILD_DIR}/lib/librdkafka.zip -d ${DEPS_DIR} && cd ${DEPS_DIR}/librdkafka
+    - pwd
     - export LIBRDKAFKA_PATH=$(pwd)
     - ./configure
     - make

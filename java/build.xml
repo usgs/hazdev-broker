@@ -10,6 +10,7 @@
 	<property name="exampleConfig" location="config/examples" />
 	<property name="consumerClientConfig" location="config/consumerclient" />
 	<property name="producerClientConfig" location="config/producerclient" />
+	<property name="archiveClientConfig" location="config/archiveclient" />
 	<property name="lib" location="../lib" />
 	<property name="build" location="build" />
 	<property name="dist" location="dist" />
@@ -63,6 +64,10 @@
 		<!-- Copy the producer client configuration files -->
 		<copy file="${producerClientConfig}/producerclient.log4j.properties" todir="${dist}/hazdev-broker"/>
 		<copy file="${producerClientConfig}/producerclient.config" todir="${dist}/hazdev-broker"/>
+
+		<!-- Copy the archive client configuration files -->
+		<copy file="${archiveClientConfig}/archiveclient.log4j.properties" todir="${dist}/hazdev-broker"/>
+		<copy file="${archiveClientConfig}/archiveclient.config" todir="${dist}/hazdev-broker"/>
 
 		<!-- Build the zip distribution -->
 		<zip destfile="${dist}/hazdev-broker.zip" basedir="${dist}">

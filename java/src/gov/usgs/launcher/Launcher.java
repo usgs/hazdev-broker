@@ -2,6 +2,7 @@ package gov.usgs.launcher;
 
 import gov.usgs.consumerclient.ConsumerClient;
 import gov.usgs.producerclient.ProducerClient;
+import gov.usgs.archiveclient.ArchiveClient;
 
 /**
  * a launcher class used to support launching either the ConsumerClient or the
@@ -39,9 +40,12 @@ public class Launcher {
 		} else if (option.equals("ProducerClient")) {
 			new ProducerClient();
 			ProducerClient.main(args2);
+		} else if (option.equals("ArchiveClient")) {
+			new ArchiveClient();
+			ArchiveClient.main(args2);
 		} else {
 			System.out.println(
-					"Invalid hazdev-broker <clientType> provided, only ConsumerClient or ProducerClient supported.");
+					"Invalid hazdev-broker <clientType> provided, only ConsumerClient, ProducerClient, or ArchiveClient supported.");
 		}
 
 	}

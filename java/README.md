@@ -107,7 +107,7 @@ Producer Client
 -----
 
 The Hazdev-Broker Jar includes a file based producer client that inserts text
-messages from one or more files in a given directory, and writes them to a 
+messages from one or more files in a given directory, and writes them to a
 Kafka Topic.
 
 **Configuration**
@@ -139,3 +139,36 @@ log4j, see [here](http://logging.apache.org/log4j/1.2/manual.html).
 **Using**
 
 To run the producer client, run the command `java -jar hazdev-broker.jar ProducerClient producerclient.config`.
+
+Archive Client
+-----
+
+The Hazdev-Broker Jar includes a file based archive client that consumes text
+messages from one or more given Kafka Topics, and writes them out as daily files
+(every 24 hours) with a given extension at a given location.
+
+**Configuration**
+
+An [example archive client configuration file](config/archiveclient/archiveclient.config)
+is provided with the Hazdev-Broker Jar.  Important archive configuration
+entries are as follows:
+
+Required Configuration:
+* FileExtension - Specifies the file extension to use.
+* OutputDirectory - Specifies the output directory to use.
+* HazdevBrokerConfig - Specifies the Hazdev-Broker configuration to connect to
+the Kafka server.
+* TopicList - Specifies one or more topics to listen to on the Kafka server.
+
+Optional Configuration:
+* Log4JConfigFile - Specifies a log4j properties file to use for logging.
+
+**Logging**
+
+The archive client uses log4j for logging, an [example log4j properties file](config/archiveclient/archiveclient.log4j.properties)
+is included with the Hazdev-Broker Jar.  For more information on configuring
+log4j, see [here](http://logging.apache.org/log4j/1.2/manual.html).
+
+**Using**
+
+To run the archive client, run the command `java -jar hazdev-broker.jar ArchiveClient archiveclient.config`.

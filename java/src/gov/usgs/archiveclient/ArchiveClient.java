@@ -266,8 +266,7 @@ public class ArchiveClient {
 					fileWriter = createPrintWriter(fileName);
 
 					// get the new creation date
-					fileCreationDate = Calendar
-							.getInstance(TimeZone.getTimeZone("GMT"));
+					fileCreationDate = currentDate;
 				}
 			}
 		} catch (Exception e) {

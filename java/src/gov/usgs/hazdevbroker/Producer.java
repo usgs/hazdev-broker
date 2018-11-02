@@ -20,11 +20,17 @@ public class Producer extends ClientBase {
 	private static org.apache.kafka.clients.producer.Producer<String, byte[]> producer;
 
 	/**
+	 * The client id for this producer
+	 */	
+	public String clientId;
+
+	/**
 	 * The constructor for the Producer class. Initializes members to default or
 	 * null values.
 	 */
 	public Producer() {
 		producer = null;
+		clientId = null;
 		CONFIGTYPE_STRING = "ProducerConfig";
 	}
 
@@ -39,6 +45,7 @@ public class Producer extends ClientBase {
 	public Producer(JSONObject configObject) {
 		// init
 		producer = null;
+		clientId = null;
 		CONFIGTYPE_STRING = "ProducerConfig";
 
 		// configuration
@@ -47,7 +54,12 @@ public class Producer extends ClientBase {
 			return;
 		}
 
-		// add any fixed configuration (like the serializer
+		// build client id
+		if (configuration.getProperty("client.id") != null) {
+			clientId = configuration.getProperty("client.id");
+		}
+
+		// add any fixed configuration (like the serializer)
 		configuration.put("key.serializer",
 				"org.apache.kafka.common.serialization.StringSerializer");
 		configuration.put("value.serializer",
@@ -70,12 +82,18 @@ public class Producer extends ClientBase {
 	public Producer(String configString) throws ParseException {
 		// init
 		producer = null;
+		clientId = null;
 		CONFIGTYPE_STRING = "ProducerConfig";
 
 		// configuration
 		Properties configuration = convertJSONStringToProp(configString);
 		if (configuration == null) {
 			return;
+		}
+
+		// build client id
+		if (configuration.getProperty("client.id") != null) {
+			clientId = configuration.getProperty("client.id");
 		}
 
 		// add any fixed configuration (like the serializer
@@ -123,6 +141,24 @@ public class Producer extends ClientBase {
 
 		// send
 		send(topic, data);
+	}
+
+	/**
+	 * Generates and sends a heartbeat message to the hazdev kafka broker
+	 * cluster using the provided topic
+	 *
+	 * @param topic
+	 *            - A String containing the topic to send to
+	 */
+	public void sendHeartbeat(String topic) {
+
+		// create the heartbeat
+		Heartbeat newHeartbeat = new Heartbeat(new Date(), topic, clientId);
+
+		// send the heartbeat
+		if (newHeartbeat.isValid()) {		
+			sendString(topic, newHeartbeat.toJSONString());
+		}
 	}
 
 	/**

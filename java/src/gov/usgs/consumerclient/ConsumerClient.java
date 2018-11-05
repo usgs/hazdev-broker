@@ -5,6 +5,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
 import gov.usgs.hazdevbroker.Consumer;
+import gov.usgs.hazdevbroker.Heartbeat;
 
 import java.util.*;
 import java.io.BufferedReader;
@@ -40,6 +41,8 @@ public class ConsumerClient {
 	public static final String MESSAGES_PER_FILE = "MessagesPerFile";
 	public static final String TIME_PER_FILE = "TimePerFile";
 	public static final String OUTPUT_DIRECTORY = "OutputDirectory";
+	public static final String HEARTBEAT_INTERVAL = "HeartbeatInterval";
+	public static final String WRITE_HEARTBEAT_FILE = "WriteHeartbeatFile";
 
 	/**
 	 * Required configuration string defining the output directory
@@ -67,6 +70,18 @@ public class ConsumerClient {
 	 * file with less than the configured number of messages, default is null
 	 */
 	private static Long timePerFile;
+
+	/**
+	 * Optional configuration Long defining the number seconds between expecting
+	 * heartbeat messages, default is null
+	 */
+	private static Long heartbeatInterval;
+
+	/**
+	 * Optional configuration boolean defining whether to write heartbeat files,
+	 * default is null
+	 */
+	private static Boolean writeHeartbeatFile;
 
 	/**
 	 * Log4J logger for ConsumerClient
@@ -105,6 +120,8 @@ public class ConsumerClient {
 		fileName = new String();
 		messagesPerFile = (long) 1;
 		timePerFile = null;
+		heartbeatInterval = null;
+		writeHeartbeatFile = (boolean) false;
 
 		// init last write time to now
 		lastFileWriteTime = (Long) (System.currentTimeMillis() / 1000);
@@ -213,6 +230,32 @@ public class ConsumerClient {
 			logger.info("Not using timePerFile.");
 		}
 
+		// get hearbeat interval
+		if (configJSON.containsKey(HEARTBEAT_INTERVAL)) {
+			heartbeatInterval = (Long) configJSON.get(HEARTBEAT_INTERVAL);
+			logger.info("Using configured heartbeatInterval of: "
+					+ heartbeatInterval.toString());
+		} else {
+			logger.info("Not using heartbeatInterval, not expecting heartbeat "
+						+ "messages.");
+		}
+
+		// get write heartbeat file
+		if (configJSON.containsKey(WRITE_HEARTBEAT_FILE)) {
+			writeHeartbeatFile = (Boolean) configJSON.get(WRITE_HEARTBEAT_FILE);
+			logger.info("Using configured writeHeartbeatFile of: "
+					+ writeHeartbeatFile.toString());
+		} else {
+			logger.info("Not using writeHeartbeatFile, not writing heartbeat "
+						+ "files.");
+		}
+
+		// setup heartbeat files
+		String heartbeatDirectory = null;
+		if (writeHeartbeatFile == true) {
+			heartbeatDirectory = outputDirectory;
+		}
+
 		// get broker config
 		JSONObject brokerConfig = null;
 		if (configJSON.containsKey(BROKER_CONFIG)) {
@@ -249,7 +292,8 @@ public class ConsumerClient {
 		logger.info("Processed Config.");
 
 		// create consumer
-		Consumer m_Consumer = new Consumer(brokerConfig);
+		Consumer m_Consumer = new Consumer(brokerConfig, heartbeatDirectory);
+		// m_Consumer.setLastHeartbeatTime(System.currentTimeMillis() / 1000);
 
 		// subscribe to topics
 		m_Consumer.subscribe(topicList);
@@ -259,63 +303,101 @@ public class ConsumerClient {
 		// run until stopped
 		while (true) {
 
-			// get messages from broker
-			ArrayList<String> brokerMessages = m_Consumer.pollString(500);
-
-			// nullcheck brokerMessages
-			if (brokerMessages == null) {
-				continue;
-			}
-
-			// add all messages in brokerMessages to queue
-			for (int i = 0; i < brokerMessages.size(); i++) {
-
-				// get string
-				String message = brokerMessages.get(i);
-				logger.debug(message);
-
-				// add string
-				fileQueue.add(message);
-			}
-
-			// check to see if we have anything to write
-			if (fileQueue.isEmpty()) {
-
-				// nothing to do
-				logger.debug("No messages to write.");
-				continue;
-				// check to see if we have enough messages to write
-			} else if (fileQueue.size() >= messagesPerFile) {
-
-				// we've got enough messages
-				logger.info("Writing output file due to number of messages, "
-						+ String.valueOf(fileQueue.size()) + " pending. ");
-
-				// write messagesPerFile worth of messages
-				writeMessagesToDisk(messagesPerFile.intValue());
-				// otherwise check to see if it's been long enough to force
-				// a file
-			} else if (timePerFile != null) {
+			// if we are checking heartbeat times
+			if (heartbeatInterval != null) {
 
 				// get current time in seconds
 				Long timeNow = System.currentTimeMillis() / 1000;
 
+				// get last heartbeat time
+				Long lastHB = m_Consumer.getLastHeartbeatTime();
+
 				// calculate elapsed time
-				Long elapsedTime = timeNow - lastFileWriteTime;
+				Long elapsedTime = timeNow - lastHB;
 
-				// has it been long enough:
-				if (elapsedTime > timePerFile) {
-					logger.info("Writing output file due to time, "
-							+ elapsedTime.toString()
-							+ " seconds since last file");
+				// has it been too long since the last heartbeat?
+				if (elapsedTime > heartbeatInterval) {
+					logger.error("No Heartbeat Message seen from topic(s)" + 
+						" in " + heartbeatInterval.toString() + " seconds! (" +
+						elapsedTime.toString() + ")");
 
-					// write all pending messages in the queue to disk
-					// we're sure there are less than messagesPerFile
-					// because otherwise that would have been handled above
-					writeMessagesToDisk(fileQueue.size());
+					// logger.error("timeNow: " + timeNow.toString() + " - lastHB: " + 
+					//		lastHB.toString() + " = elapsedTime: " + 
+					//		elapsedTime.toString());
+
+					// reset last heartbeat time so that we don't fill the 
+					// log
+					m_Consumer.setLastHeartbeatTime(timeNow);
+				} else {
+					logger.debug("Heartbeat seen from topic(s) (" +
+						elapsedTime.toString() + ")");
+				}
+			}
+
+			// get any messages from broker
+			try {
+				ArrayList<String> brokerMessages = m_Consumer.pollString(500);
+
+				// nullcheck brokerMessages (null means no messages)
+				if (brokerMessages == null) {
+					continue;
 				}
 
-			}
+				// add all messages in brokerMessages to file queue
+				// but filter out heartbeat messages
+				for (int i = 0; i < brokerMessages.size(); i++) {
+
+					// get message as string
+					String message = brokerMessages.get(i);
+					logger.debug(message);
+
+					// add string to queue
+					fileQueue.add(message);
+				}
+
+				// write file containing messages to disk
+				// check to see if we have anything to write
+				if (fileQueue.isEmpty()) {
+
+					// nothing to do
+					logger.debug("No messages to write.");
+					continue;
+					// check to see if we have enough messages to write
+				} else if (fileQueue.size() >= messagesPerFile) {
+
+					// we've got enough messages
+					logger.info("Writing output file due to number of messages, "
+							+ String.valueOf(fileQueue.size()) + " pending. ");
+
+					// write messagesPerFile worth of messages
+					writeMessagesToDisk(messagesPerFile.intValue());
+					// otherwise check to see if it's been long enough to force
+					// a file
+				} else if (timePerFile != null) {
+
+					// get current time in seconds
+					Long timeNow = System.currentTimeMillis() / 1000;
+
+					// calculate elapsed time
+					Long elapsedTime = timeNow - lastFileWriteTime;
+
+					// has it been long enough:
+					if (elapsedTime > timePerFile) {
+						logger.info("Writing output file due to time, "
+								+ elapsedTime.toString()
+								+ " seconds since last file");
+
+						// write all pending messages in the queue to disk
+						// we're sure there are less than messagesPerFile
+						// because otherwise that would have been handled above
+						writeMessagesToDisk(fileQueue.size());
+					}
+				}	
+			} catch	(Exception e) {
+
+				// log exception
+				logger.error(e.toString());
+			}	
 		}
 	}
 
@@ -371,7 +453,7 @@ public class ConsumerClient {
 		} catch (Exception e) {
 
 			// log exception
-			logger.error(e.toString());
+			logger.error("writeMessagesToDisk: " + e.toString());
 			return (false);
 		}
 

@@ -164,7 +164,7 @@ public class Heartbeat {
 			clientId = null;
         }
         
-        return(isValid());
+        return(true);
     }
 
     /**

@@ -34,6 +34,8 @@ public class ProducerClient {
 	public static final String TIME_PER_FILE = "TimePerFile";
 	public static final String INPUT_DIRECTORY = "InputDirectory";
 	public static final String ARCHIVE_DIRECTORY = "ArchiveDirectory";
+	public static final String HEARTBEAT_INTERVAL = "HeartbeatInterval";
+
 
 	/**
 	 * Required configuration string defining the input directory
@@ -55,6 +57,17 @@ public class ProducerClient {
 	 * file, default is null
 	 */
 	private static Long timePerFile;
+
+	/**
+	 * Optional configuration Long defining the number seconds between sending
+	 * heartbeat messages, default is null
+	 */
+	private static Long heartbeatInterval;
+
+	/**
+	 * Variable containing time the last heartbeat was sent.
+	 */
+	private static Long lastHeartbeatTime;
 
 	/**
 	 * Log4J logger for ProducerClient
@@ -81,6 +94,10 @@ public class ProducerClient {
 		archiveDirectory = null;
 		fileExtension = null;
 		timePerFile = null;
+		heartbeatInterval = null;
+
+		// init last heartbeat time to now
+		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
 
 		// get config file name
 		String configFileName = args[0];
@@ -175,6 +192,16 @@ public class ProducerClient {
 			logger.info("Not using timePerFile.");
 		}
 
+		// get hearbeat interval
+		if (configJSON.containsKey(HEARTBEAT_INTERVAL)) {
+			heartbeatInterval = (Long) configJSON.get(HEARTBEAT_INTERVAL);
+			logger.info("Using configured heartbeatInterval of: "
+					+ heartbeatInterval.toString());
+		} else {
+			logger.info("Not using heartbeatInterval, not sending heartbeat "
+						+ "messages.");
+		}	
+
 		// get broker config
 		JSONObject brokerConfig = null;
 		if (configJSON.containsKey(BROKER_CONFIG)) {
@@ -199,7 +226,7 @@ public class ProducerClient {
 		logger.info("Processed Config.");
 
 		// create producer
-		Producer m_Producer = new Producer(brokerConfig);
+		Producer m_Producer = new Producer(brokerConfig, heartbeatInterval);
 
 		logger.info("Created Producer.");
 
@@ -223,6 +250,12 @@ public class ProducerClient {
 					// send message
 					m_Producer.sendString(topic, message);
 				}
+			} else {
+
+				logger.debug("Sending idle heartbeat");
+				
+				// send a heartbeat
+				m_Producer.sendHeartbeat(topic);
 			}
 
 			// wait a bit before the next file
@@ -273,16 +306,17 @@ public class ProducerClient {
 							messageList.add(text);
 						}
 					} catch (FileNotFoundException e) {
-						logger.error(e.toString());
+						logger.error("readMessagesFromFile: " + e.toString());
 					} catch (IOException e) {
-						logger.error(e.toString());
+						logger.error("readMessagesFromFile: " + e.toString());
 					} finally {
 						try {
 							if (inputReader != null) {
 								inputReader.close();
 							}
 						} catch (IOException e) {
-							logger.error(e.toString());
+							logger.error("readMessagesFromFile: " + 
+								e.toString());
 						}
 					}
 
@@ -305,7 +339,7 @@ public class ProducerClient {
 		} catch (Exception e) {
 
 			// log exception
-			logger.error(e.toString());
+			logger.error("readMessagesFromFile: " + e.toString());
 			return (null);
 		}
 

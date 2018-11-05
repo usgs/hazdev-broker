@@ -20,9 +20,20 @@ public class Producer extends ClientBase {
 	private static org.apache.kafka.clients.producer.Producer<String, byte[]> producer;
 
 	/**
+	 * Long defining the number seconds between sending heartbeat messages, 
+	 * default is 30 seconds, set to null to disable heartbeat messages
+	 */
+	private static Long heartbeatInterval;
+
+	/**
+	 * Variable containing time the last heartbeat was sent.
+	 */
+	private static Long lastHeartbeatTime;
+
+	/**
 	 * The client id for this producer
 	 */	
-	public String clientId;
+	private static String clientId;
 
 	/**
 	 * The constructor for the Producer class. Initializes members to default or
@@ -31,7 +42,11 @@ public class Producer extends ClientBase {
 	public Producer() {
 		producer = null;
 		clientId = null;
+		heartbeatInterval = null;
 		CONFIGTYPE_STRING = "ProducerConfig";
+
+		// init last heartbeat time to now
+		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
 	}
 
 	/**
@@ -43,30 +58,42 @@ public class Producer extends ClientBase {
 	 *            - A JSONObject containing the configuration
 	 */
 	public Producer(JSONObject configObject) {
-		// init
 		producer = null;
 		clientId = null;
+		heartbeatInterval = 30L;
 		CONFIGTYPE_STRING = "ProducerConfig";
 
-		// configuration
+		// init last heartbeat time to now
+		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
+
+		// configuration/setup
 		Properties configuration = convertJSONConfigToProp(configObject);
-		if (configuration == null) {
-			return;
-		}
+		setup(configuration);
+	}
 
-		// build client id
-		if (configuration.getProperty("client.id") != null) {
-			clientId = configuration.getProperty("client.id");
-		}
+	/**
+	 * The advanced constructor for the Producer class. Initializes members to
+	 * default values and used the provided JSON configuration to configure the
+	 * kafka producer client.
+	 *
+	 * @param configObject
+	 *            - A JSONObject containing the configuration
+	 * @param hbInterval
+	 *            - A Long containing the heartbeat interval to use, null to 
+	 * disable heartbeat messages
+	 */
+	public Producer(JSONObject configObject, Long hbInterval) {
+		producer = null;
+		clientId = null;
+		heartbeatInterval = hbInterval;
+		CONFIGTYPE_STRING = "ProducerConfig";
 
-		// add any fixed configuration (like the serializer)
-		configuration.put("key.serializer",
-				"org.apache.kafka.common.serialization.StringSerializer");
-		configuration.put("value.serializer",
-				"org.apache.kafka.common.serialization.ByteArraySerializer");
+		// init last heartbeat time to now
+		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
 
-		// create the producer
-		producer = new KafkaProducer<String, byte[]>(configuration);
+		// configuration/setup
+		Properties configuration = convertJSONConfigToProp(configObject);
+		setup(configuration);
 	}
 
 	/**
@@ -79,31 +106,81 @@ public class Producer extends ClientBase {
 	 * @throws org.json.simple.parser.ParseException
 	 *             if a json parse exception occurs
 	 */
-	public Producer(String configString) throws ParseException {
+	public Producer(String configString) 
+		throws ParseException {
 		// init
 		producer = null;
 		clientId = null;
+		heartbeatInterval = 30L;
 		CONFIGTYPE_STRING = "ProducerConfig";
+		
+		// init last heartbeat time to now
+		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
 
-		// configuration
+		// configuration/setup
 		Properties configuration = convertJSONStringToProp(configString);
-		if (configuration == null) {
-			return;
+		setup(configuration);
+	}
+
+	/**
+	 * The advanced constructor for the Producer class. Initializes members to
+	 * default values and used the provided JSON configuration string to
+	 * configure the kafka producer client.
+	 *
+	 * @param configString
+	 *            - A JSON formatted String containing the configuration
+	 * @param hbInterval
+	 *            - A Long containing the heartbeat interval to use, null to 
+	 * disable heartbeat messages
+	 * @throws org.json.simple.parser.ParseException
+	 *             if a json parse exception occurs
+	 */
+	public Producer(String configString, Long hbInterval) 
+		throws ParseException {
+		// init
+		producer = null;
+		clientId = null;
+		heartbeatInterval = hbInterval;
+		CONFIGTYPE_STRING = "ProducerConfig";
+		
+		// init last heartbeat time to now
+		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
+
+		// configuration/setup
+		Properties configuration = convertJSONStringToProp(configString);
+		setup(configuration);
+	}
+
+	/**
+	 * The setup function for the Producer class. Uses the provided Properties 
+	 * configuration to configure the kafka producer client.
+	 *
+	 * @param configProperties
+	 *            - A Properties containing the configuration
+	 * @return Returns true if successful, false otherwise.
+	 */	
+	public boolean setup(Properties configProperties) {
+	
+		// configuration
+		if (configProperties == null) {
+			return (false);
 		}
 
 		// build client id
-		if (configuration.getProperty("client.id") != null) {
-			clientId = configuration.getProperty("client.id");
+		if (configProperties.getProperty("client.id") != null) {
+			clientId = configProperties.getProperty("client.id");
 		}
 
-		// add any fixed configuration (like the serializer
-		configuration.put("key.serializer",
+		// add any fixed configuration (like the serializer)
+		configProperties.put("key.serializer",
 				"org.apache.kafka.common.serialization.StringSerializer");
-		configuration.put("value.serializer",
+				configProperties.put("value.serializer",
 				"org.apache.kafka.common.serialization.ByteArraySerializer");
 
 		// create the producer
-		producer = new KafkaProducer<String, byte[]>(configuration);
+		producer = new KafkaProducer<String, byte[]>(configProperties);
+
+		return(true);
 	}
 
 	/**
@@ -123,6 +200,52 @@ public class Producer extends ClientBase {
 
 		// send it async
 		producer.send(message);
+
+		// send heartbeat message
+		sendHeartbeat(topic);	
+	}
+
+	/**
+	 * Generates and sends a heartbeat message to the hazdev kafka broker
+	 * cluster using the provided topic. NOTE that it is considered best 
+	 * practice that a continously running producer add a call to this function
+	 * to it's sending loop.
+	 *
+	 * @param topic
+	 *            - A String containing the topic to send to
+	 */
+	public void sendHeartbeat(String topic) {
+
+		if (heartbeatInterval != null) {
+
+			// get current time in seconds
+			Long timeNow = System.currentTimeMillis() / 1000;
+
+			// calculate elapsed time
+			Long elapsedTime = timeNow - lastHeartbeatTime;
+
+			// has it been long enough since the last heartbeat?
+			if (elapsedTime >= heartbeatInterval) {
+				
+				// create the heartbeat
+				Heartbeat newHeartbeat = new Heartbeat(new Date(), topic, clientId);
+
+				// send the heartbeat
+				if (newHeartbeat.isValid()) {	
+					String heartbeatString = newHeartbeat.toJSONString();
+					byte[] heartbeatData = heartbeatString.getBytes();
+
+					ProducerRecord<String, byte[]> heartbeatMessage = 
+						new ProducerRecord<String, byte[]>(topic, heartbeatData);	
+
+					// send it async
+					producer.send(heartbeatMessage);
+				}
+
+				// remember heartbeat time
+				lastHeartbeatTime = timeNow;
+			}
+		}
 	}
 
 	/**
@@ -141,24 +264,6 @@ public class Producer extends ClientBase {
 
 		// send
 		send(topic, data);
-	}
-
-	/**
-	 * Generates and sends a heartbeat message to the hazdev kafka broker
-	 * cluster using the provided topic
-	 *
-	 * @param topic
-	 *            - A String containing the topic to send to
-	 */
-	public void sendHeartbeat(String topic) {
-
-		// create the heartbeat
-		Heartbeat newHeartbeat = new Heartbeat(new Date(), topic, clientId);
-
-		// send the heartbeat
-		if (newHeartbeat.isValid()) {		
-			sendString(topic, newHeartbeat.toJSONString());
-		}
 	}
 
 	/**

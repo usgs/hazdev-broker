@@ -1,6 +1,13 @@
 package gov.usgs.hazdevbroker;
 
 import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 import org.apache.kafka.clients.consumer.*;
 import org.json.simple.JSONObject;
@@ -14,9 +21,29 @@ import org.json.simple.parser.ParseException;
 public class Consumer extends ClientBase {
 
 	/**
+	 * Optional configuration string defining the heartbeat directory
+	 */
+	private static String heartbeatDirectory;
+
+	/**
 	 * The kafka consumer client
 	 */
 	private static org.apache.kafka.clients.consumer.Consumer<String, byte[]> consumer;
+
+	/**
+	 * The Heartbeat message processor
+	 */
+	private static Heartbeat heartbeatProcessor;
+
+	/**
+	 * Variable containing time of the last heartbeat.
+	 */
+	private static Long lastHeartbeatTime;
+
+	/**
+	 * A collection of strings contining the topics 
+	 */	
+	private static Collection<String> topicList;
 
 	/**
 	 * The constructor for the Consumer class. Initializes members to default or
@@ -25,7 +52,13 @@ public class Consumer extends ClientBase {
 	public Consumer() {
 		// init
 		consumer = null;
+		heartbeatProcessor = null;
+		heartbeatDirectory = null;
+		topicList = null;
 		CONFIGTYPE_STRING = "ConsumerConfig";
+
+		// init last  heartbeat time to now
+		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);	
 	}
 
 	/**
@@ -39,22 +72,43 @@ public class Consumer extends ClientBase {
 	public Consumer(JSONObject configObject) {
 		// init
 		consumer = null;
+		heartbeatProcessor = null;
+		heartbeatDirectory = null;
+		topicList = null;
 		CONFIGTYPE_STRING = "ConsumerConfig";
 
-		// configuration
+		// init last  heartbeat time to now
+		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);		
+
+		// configuration/setup
 		Properties configuration = convertJSONConfigToProp(configObject);
-		if (configuration == null) {
-			return;
-		}
+		setup(configuration);
+	}
 
-		// add any fixed configuration (like the serializer
-		configuration.put("key.deserializer",
-				"org.apache.kafka.common.serialization.StringDeserializer");
-		configuration.put("value.deserializer",
-				"org.apache.kafka.common.serialization.ByteArrayDeserializer");
+/**
+	 * The advanced constructor for the Consumer class. Initializes members to
+	 * default values and used the provided JSON configuration to configure the
+	 * kafka consumer client.
+	 *
+	 * @param configObject
+	 *            - A JSONObject containing the configuration
+	 * @param hbDirectory
+	 * 			  - A String containing the directory to write heartbeat messages
+	 */
+	public Consumer(JSONObject configObject, String hbDirectory) {
+		// init
+		consumer = null;
+		heartbeatProcessor = null;
+		heartbeatDirectory = hbDirectory;
+		topicList = null;
+		CONFIGTYPE_STRING = "ConsumerConfig";
 
-		// create the consumer
-		consumer = new KafkaConsumer<String, byte[]>(configuration);
+		// init last  heartbeat time to now
+		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);		
+
+		// configuration/setup
+		Properties configuration = convertJSONConfigToProp(configObject);
+		setup(configuration);
 	}
 
 	/**
@@ -70,22 +124,75 @@ public class Consumer extends ClientBase {
 	public Consumer(String configString) throws ParseException {
 		// init
 		consumer = null;
+		heartbeatProcessor = null;
+		heartbeatDirectory = null;
+		topicList = null;
 		CONFIGTYPE_STRING = "ConsumerConfig";
 
-		// configuration
+		// init last  heartbeat time to now
+		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);		
+
+		// configuration/setup
 		Properties configuration = convertJSONStringToProp(configString);
-		if (configuration == null) {
-			return;
+		setup(configuration);		
+	}
+
+	/**
+	 * The advanced constructor for the Consumer class. Initializes members to
+	 * default values and used the provided JSON configuration string to
+	 * configure the kafka consumer client.
+	 *
+	 * @param configString
+	 *            - A JSON formatted String containing the configuration
+	 * @param hbDirectory
+	 * 			  - A String containing the directory to write heartbeat messages
+	 * @throws org.json.simple.parser.ParseException
+	 *             if a json parse exception occurs
+	 */
+	public Consumer(String configString, String hbDirectory) 
+			throws ParseException {
+		// init
+		consumer = null;
+		heartbeatProcessor = null;
+		heartbeatDirectory = hbDirectory;
+		topicList = null;
+		CONFIGTYPE_STRING = "ConsumerConfig";
+
+		// init last  heartbeat time to now
+		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);		
+
+		// configuration/setup
+		Properties configuration = convertJSONStringToProp(configString);
+		setup(configuration);		
+	}
+
+	/**
+	 * The setup function for the Consumer class. Uses the provided Properties 
+	 * configuration to configure the kafka producer client.
+	 *
+	 * @param configProperties
+	 *            - A Properties containing the configuration
+	 * @return Returns true if successful, false otherwise.
+	 */	
+	public boolean setup(Properties configProperties) {
+
+		if (configProperties == null) {
+			return(false);
 		}
 
 		// add any fixed configuration (like the serializer
-		configuration.put("key.deserializer",
+		configProperties.put("key.deserializer",
 				"org.apache.kafka.common.serialization.StringDeserializer");
-		configuration.put("value.deserializer",
+		configProperties.put("value.deserializer",
 				"org.apache.kafka.common.serialization.ByteArrayDeserializer");
 
 		// create the consumer
-		consumer = new KafkaConsumer<String, byte[]>(configuration);
+		consumer = new KafkaConsumer<String, byte[]>(configProperties);
+
+		// create the heartbeat processor
+		heartbeatProcessor = new Heartbeat();	
+		
+		return(true);
 	}
 
 	/**
@@ -107,6 +214,7 @@ public class Consumer extends ClientBase {
 	 */
 	public void subscribe(Collection<String> topics) {
 		consumer.subscribe(topics);
+		topicList = topics;
 	}
 
 	/**
@@ -118,8 +226,15 @@ public class Consumer extends ClientBase {
 	 *            arbitrarily long time
 	 * @return Returns an ArrayList&lt;byte[]&gt; containing the data from the broker
 	 *         cluster since the last time it was polled.
+	 * @throws org.json.simple.parser.ParseException
+	 *             if a heartbeat parse exception occurs
+	 * @throws java.io.FileNotFoundException 
+	 * 			   if a heartbeat file could not be created 
+	 * @throws java.io.UnsupportedEncodingException
+	 *             if an encoding error occured
 	 */
-	public ArrayList<byte[]> poll(long timeout) {
+	public ArrayList<byte[]> poll(long timeout) throws ParseException,
+			FileNotFoundException, UnsupportedEncodingException {
 
 		ArrayList<byte[]> data = new ArrayList<byte[]>();
 
@@ -131,7 +246,19 @@ public class Consumer extends ClientBase {
 		// get any messages pending for our topic(s) from kafka
 		ConsumerRecords<String, byte[]> records = consumer.poll(timeout);
 		for (ConsumerRecord<String, byte[]> record : records) {
-			data.add(record.value());
+
+			// convert to string to see if this is a heartbeat
+			// note that if poll was called by pollString, we're
+			// converting *twice*, I'm not sure how to check for heartbeats
+			// more efficenty than this tho
+			String recordString = new String(record.value());
+
+			// don't add heartbeats to the data arraylist
+			if (heartbeatProcessor.fromJSONString(recordString) == true) {
+				handleHeartbeat(heartbeatProcessor);
+			} else {
+				data.add(record.value());
+			}
 		}
 
 		return (data);
@@ -146,8 +273,15 @@ public class Consumer extends ClientBase {
 	 *            arbitrarily long time
 	 * @return Returns an ArrayList&lt;String&gt; containing the messages from the
 	 *         broker cluster since the last time it was polled.
+	 * @throws org.json.simple.parser.ParseException
+	 *             if a heartbeat parse exception occurs
+	 * @throws java.io.FileNotFoundException 
+	 * 			   if a heartbeat file could not be created 
+	 * @throws java.io.UnsupportedEncodingException
+	 *             if an encoding error occured
 	 */
-	public ArrayList<String> pollString(long timeout) {
+	public ArrayList<String> pollString(long timeout) throws ParseException,
+			FileNotFoundException, UnsupportedEncodingException {
 
 		ArrayList<String> messages = new ArrayList<String>();
 
@@ -161,4 +295,68 @@ public class Consumer extends ClientBase {
 
 		return (messages);
 	}
+
+	/**
+	 * heartbeat handling function
+	 *
+	 * @param aHeartbeat
+	 *            - A Heartbeat containing the heartbeat to handle
+	 * @throws java.io.FileNotFoundException 
+	 * 			   if a heartbeat file could not be created 
+	 * @throws java.io.UnsupportedEncodingException
+	 *             if an encoding error occured
+	 */	
+	public void handleHeartbeat(Heartbeat aHeartbeat) throws 
+			FileNotFoundException, UnsupportedEncodingException {
+
+		// is this a valid heartbeat
+		if (aHeartbeat.isValid() == false) {
+			return;
+		}
+
+		// is this heartbeat for one of the configured topics
+		if (!topicList.contains(aHeartbeat.getTopic())) {
+			return;
+		}
+
+		// get the time the heartbeat was recieved
+		lastHeartbeatTime = System.currentTimeMillis() / 1000;
+
+		// if we are writing heartbeat files
+		if (heartbeatDirectory != null) {
+
+			// build heartbeat filename from heartbeat topic 
+			// name and client id
+			String heartbeatFileName = heartbeatDirectory + "/" + 
+				aHeartbeat.getTopic() + "_" + 
+				aHeartbeat.getClientId() +
+				".heartbeat";
+
+			// create an UTF-8 formatted printwriter to write  
+			// the heartbeat to disk
+			PrintWriter heartbeatWriter = 
+				new PrintWriter(heartbeatFileName, "UTF-8");
+
+			// just call print
+			heartbeatWriter.print(aHeartbeat.toJSONString());
+
+			// done with file
+			heartbeatWriter.close();
+		}		
+	}
+
+	/**
+	 * @return the lastHeartbeatTime
+	 */
+	public Long getLastHeartbeatTime() {
+		return lastHeartbeatTime;
+	}
+
+	/**
+	 * @param lastHeartbeatTime
+	 *            the lastHeartbeatTime to set
+	 */
+	public void setLastHeartbeatTime(Long lastHeartbeatTime) {
+		this.lastHeartbeatTime = lastHeartbeatTime;
+	}  
 }

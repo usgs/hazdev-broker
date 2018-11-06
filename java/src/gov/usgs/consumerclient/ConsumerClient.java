@@ -293,7 +293,6 @@ public class ConsumerClient {
 
 		// create consumer
 		Consumer m_Consumer = new Consumer(brokerConfig, heartbeatDirectory);
-		// m_Consumer.setLastHeartbeatTime(System.currentTimeMillis() / 1000);
 
 		// subscribe to topics
 		m_Consumer.subscribe(topicList);
@@ -321,10 +320,6 @@ public class ConsumerClient {
 						" in " + heartbeatInterval.toString() + " seconds! (" +
 						elapsedTime.toString() + ")");
 
-					// logger.error("timeNow: " + timeNow.toString() + " - lastHB: " + 
-					//		lastHB.toString() + " = elapsedTime: " + 
-					//		elapsedTime.toString());
-
 					// reset last heartbeat time so that we don't fill the 
 					// log
 					m_Consumer.setLastHeartbeatTime(timeNow);
@@ -344,7 +339,6 @@ public class ConsumerClient {
 				}
 
 				// add all messages in brokerMessages to file queue
-				// but filter out heartbeat messages
 				for (int i = 0; i < brokerMessages.size(); i++) {
 
 					// get message as string
@@ -362,7 +356,7 @@ public class ConsumerClient {
 					// nothing to do
 					logger.debug("No messages to write.");
 					continue;
-					// check to see if we have enough messages to write
+				// check to see if we have enough messages to write
 				} else if (fileQueue.size() >= messagesPerFile) {
 
 					// we've got enough messages
@@ -371,8 +365,8 @@ public class ConsumerClient {
 
 					// write messagesPerFile worth of messages
 					writeMessagesToDisk(messagesPerFile.intValue());
-					// otherwise check to see if it's been long enough to force
-					// a file
+				// otherwise check to see if it's been long enough to force
+				// a file
 				} else if (timePerFile != null) {
 
 					// get current time in seconds

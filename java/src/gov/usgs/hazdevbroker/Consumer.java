@@ -1,13 +1,8 @@
 package gov.usgs.hazdevbroker;
 
 import java.util.*;
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 import org.apache.kafka.clients.consumer.*;
 import org.json.simple.JSONObject;
@@ -189,7 +184,8 @@ public class Consumer extends ClientBase {
 		// create the consumer
 		consumer = new KafkaConsumer<String, byte[]>(configProperties);
 
-		// create the heartbeat processor
+		// create the heartbeat processor, we need this to tell if a 
+		// message is a heartbeat or not
 		heartbeatProcessor = new Heartbeat();	
 		
 		return(true);
@@ -214,6 +210,8 @@ public class Consumer extends ClientBase {
 	 */
 	public void subscribe(Collection<String> topics) {
 		consumer.subscribe(topics);
+
+		// remember the topic list for handling heartbeats
 		topicList = topics;
 	}
 
@@ -245,6 +243,9 @@ public class Consumer extends ClientBase {
 
 		// get any messages pending for our topic(s) from kafka
 		ConsumerRecords<String, byte[]> records = consumer.poll(timeout);
+
+		// go though each message, adding it to the return ArrayList
+		// removing heartbeat messages
 		for (ConsumerRecord<String, byte[]> record : records) {
 
 			// convert to string to see if this is a heartbeat
@@ -315,34 +316,18 @@ public class Consumer extends ClientBase {
 		}
 
 		// is this heartbeat for one of the configured topics
+		// we don't want to handle hearbeats for other topics
 		if (!topicList.contains(aHeartbeat.getTopic())) {
 			return;
 		}
 
-		// get the time the heartbeat was recieved
-		lastHeartbeatTime = System.currentTimeMillis() / 1000;
+		// set the time the heartbeat was recieved in case our 
+		// caller is monitoring this
+		setLastHeartbeatTime(System.currentTimeMillis() / 1000);
 
-		// if we are writing heartbeat files
-		if (heartbeatDirectory != null) {
-
-			// build heartbeat filename from heartbeat topic 
-			// name and client id
-			String heartbeatFileName = heartbeatDirectory + "/" + 
-				aHeartbeat.getTopic() + "_" + 
-				aHeartbeat.getClientId() +
-				".heartbeat";
-
-			// create an UTF-8 formatted printwriter to write  
-			// the heartbeat to disk
-			PrintWriter heartbeatWriter = 
-				new PrintWriter(heartbeatFileName, "UTF-8");
-
-			// just call print
-			heartbeatWriter.print(aHeartbeat.toJSONString());
-
-			// done with file
-			heartbeatWriter.close();
-		}		
+		// write the heartbeat to disk (won't write if heartbeatDirectory is
+		// null)
+		aHeartbeat.writeToDisk(heartbeatDirectory);
 	}
 
 	/**

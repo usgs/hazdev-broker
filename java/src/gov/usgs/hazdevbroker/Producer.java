@@ -21,7 +21,8 @@ public class Producer extends ClientBase {
 
 	/**
 	 * Long defining the number seconds between sending heartbeat messages, 
-	 * default is 30 seconds, set to null to disable heartbeat messages
+	 * default is 30 seconds, set to -1 to always send heartbeat messages, set 
+	 * to null to disable heartbeat messages
 	 */
 	private static Long heartbeatInterval;
 
@@ -79,8 +80,9 @@ public class Producer extends ClientBase {
 	 * @param configObject
 	 *            - A JSONObject containing the configuration
 	 * @param hbInterval
-	 *            - A Long containing the heartbeat interval to use, null to 
-	 * disable heartbeat messages
+	 *            - A Long containing the heartbeat interval to use, set to -1 
+	 * to always send heartbeat messages, set to null to disable heartbeat 
+	 * messages
 	 */
 	public Producer(JSONObject configObject, Long hbInterval) {
 		producer = null;
@@ -130,8 +132,9 @@ public class Producer extends ClientBase {
 	 * @param configString
 	 *            - A JSON formatted String containing the configuration
 	 * @param hbInterval
-	 *            - A Long containing the heartbeat interval to use, null to 
-	 * disable heartbeat messages
+	 *            - A Long containing the heartbeat interval to use, set to -1 
+	 * to always send heartbeat messages, set to null to disable heartbeat 
+	 * messages
 	 * @throws org.json.simple.parser.ParseException
 	 *             if a json parse exception occurs
 	 */
@@ -201,7 +204,9 @@ public class Producer extends ClientBase {
 		// send it async
 		producer.send(message);
 
-		// send heartbeat message
+		// send heartbeat message, will not send if heartbeats
+		// are disabled, or if it has not been long enough to
+		// send a heartbeat
 		sendHeartbeat(topic);	
 	}
 
@@ -216,6 +221,7 @@ public class Producer extends ClientBase {
 	 */
 	public void sendHeartbeat(String topic) {
 
+		// don't send heartbeat if it's disabled
 		if (heartbeatInterval != null) {
 
 			// get current time in seconds
@@ -225,7 +231,8 @@ public class Producer extends ClientBase {
 			Long elapsedTime = timeNow - lastHeartbeatTime;
 
 			// has it been long enough since the last heartbeat?
-			if (elapsedTime >= heartbeatInterval) {
+			// or are we always sending heartbeats?
+			if ((elapsedTime >= heartbeatInterval) || (heartbeatInterval < 0)) {
 				
 				// create the heartbeat
 				Heartbeat newHeartbeat = new Heartbeat(new Date(), topic, clientId);
@@ -243,7 +250,7 @@ public class Producer extends ClientBase {
 				}
 
 				// remember heartbeat time
-				lastHeartbeatTime = timeNow;
+				setLastHeartbeatTime(timeNow);
 			}
 		}
 	}
@@ -276,4 +283,19 @@ public class Producer extends ClientBase {
 	public void close(long timeout) {
 		producer.close(timeout, TimeUnit.MILLISECONDS);
 	}
+
+	/**
+	 * @return the lastHeartbeatTime
+	 */
+	public Long getLastHeartbeatTime() {
+		return lastHeartbeatTime;
+	}
+
+	/**
+	 * @param lastHeartbeatTime
+	 *            the lastHeartbeatTime to set
+	 */
+	public void setLastHeartbeatTime(Long lastHeartbeatTime) {
+		this.lastHeartbeatTime = lastHeartbeatTime;
+	}  	
 }

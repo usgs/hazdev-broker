@@ -1,6 +1,13 @@
 package gov.usgs.hazdevbroker;
 
 import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -122,7 +129,8 @@ public class Heartbeat {
 		return(Utility.toJSONString(newJSONObject));
     }
     
-	/** Converts the provided string from a serialized JSON string, populating
+	/** 
+     * Converts the provided string from a serialized JSON string, populating
 	 * members
 	 * @param jsonString - A string containing the serialized JSON
 	 * @return Returns true if successful, false otherwise
@@ -165,6 +173,41 @@ public class Heartbeat {
         }
         
         return(true);
+    }
+
+    /** Writes the Heartbeat to disk as a heartbeat file. If the heartbeat is
+     * not valid the file will not be writen
+	 * @param heartbeatDirectory - A string containing the directory to write
+     * the heartbeat file to, if null, heartbeat files will not be written.
+	 * @throws java.io.FileNotFoundException 
+	 * 			   if a heartbeat file could not be created 
+	 * @throws java.io.UnsupportedEncodingException
+	 *             if an encoding error occured
+	 */      
+    public void writeToDisk(String heartbeatDirectory) throws 
+            FileNotFoundException, UnsupportedEncodingException {
+
+        if (heartbeatDirectory == null) {
+            return;
+        }
+        if (isValid() == false) {
+			return;
+		}
+
+        // build heartbeat filename from the topic name and client id
+        String heartbeatFileName = heartbeatDirectory + "/" + 
+            topic + "_" + clientId + ".heartbeat";
+
+        // create an UTF-8 formatted printwriter to write  
+        // the heartbeat to disk
+        PrintWriter heartbeatWriter = 
+            new PrintWriter(heartbeatFileName, "UTF-8");
+
+        // just call print
+        heartbeatWriter.print(toJSONString());
+
+        // done with file
+        heartbeatWriter.close();
     }
 
     /**

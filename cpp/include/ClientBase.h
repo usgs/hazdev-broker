@@ -7,6 +7,10 @@
 #ifndef HAZDEVBROKER_CLIENTBASE_H
 #define HAZDEVBROKER_CLIENTBASE_H
 
+#include <Utility.h>
+
+#include <rdkafkacpp.h>
+
 #include <string>
 #include <exception>
 #include <functional>
@@ -16,35 +20,7 @@
 #include <csignal>
 #include <cstring>
 
-#include "rdkafkacpp.h"
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-
-
-
-/**
- * \namespace hazdevbroker
- * \brief hazdevbroker namespace for hazdevbroker client classes and functions
- *
- * The hazdevbroker namespace contains various classes and functions used
- * to create producer and consumer clients used to connect to the hazdevbroker.
- */
 namespace hazdevbroker {
-
-/**
- * \typedef byte
- *
- * \brief byte format for hazdevbroker
- *
- * The hazdevbroker byte type is a typedef to set std::uint8_t as byte for
- * code readabilty and to match the similar java implementation.
- */
-#ifndef byte
-typedef std::uint8_t byte;
-#endif
-
-
 /**
  * \brief hazdevbroker client base class
  *
@@ -53,8 +29,7 @@ typedef std::uint8_t byte;
  * rapidjson for JSON, and librdkafa for kafka functionality.
  */
 class ClientBase {
-public:
-
+ public:
 	/**
 	 * \brief ClientBase constructor
 	 *
@@ -78,8 +53,8 @@ public:
 	 * \param topicConfigJSON - A reference to a rapidjson::Value containing the
 	 * topic configuration.
 	 */
-	virtual void setup(rapidjson::Value &configJSON,
-			rapidjson::Value &topicConfigJSON) = 0;
+	virtual void setup(rapidjson::Value &configJSON, // NOLINT
+			rapidjson::Value &topicConfigJSON) = 0; // NOLINT
 
 	/**
 	 * \brief virtual string setup function
@@ -121,8 +96,8 @@ public:
 	 * \returns Returns a pointer to a populated RdKafka::Conf object if
 	 * successful, NULL otherwise.
 	 */
-	RdKafka::Conf * convertJSONConfigToProp(rapidjson::Value &configJSON,
-			rapidjson::Value &topicConfigJSON);
+	RdKafka::Conf * convertJSONConfigToProp(rapidjson::Value &configJSON,  // NOLINT
+			rapidjson::Value &topicConfigJSON);  // NOLINT
 
 	/**
 	 * \brief optional logging callback setup function
@@ -132,8 +107,7 @@ public:
 	 */
 	void setLogCallback(std::function<void(std::string)> callback);
 
-protected:
-
+ protected:
 	/**
 	 * \brief logging function
 	 *
@@ -148,15 +122,17 @@ protected:
 	 */
 	std::string m_sConfigType;
 
-private:
+	/**
+	 * The a std::string containing the client id used by clients.
+	 */	
+	std::string m_sClientId;
 
+ private:
 	/**
 	 * \brief A std::function<void(std::string)> containing the optional logging
 	 * callback.
 	 */
 	std::function<void(std::string)> m_logCallback;
-
 };
-
-}
-#endif
+}  // namespace hazdevbroker
+#endif  // HAZDEVBROKER_CLIENTBASE_H

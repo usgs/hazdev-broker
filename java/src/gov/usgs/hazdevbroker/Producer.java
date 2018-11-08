@@ -213,7 +213,7 @@ public class Producer extends ClientBase {
 	/**
 	 * Generates and sends a heartbeat message to the hazdev kafka broker
 	 * cluster using the provided topic. NOTE that it is considered best 
-	 * practice that a continously running producer add a call to this function
+	 * practice that a continuously running producer add a call to this function
 	 * to it's sending loop.
 	 *
 	 * @param topic

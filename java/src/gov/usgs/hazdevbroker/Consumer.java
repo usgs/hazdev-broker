@@ -89,6 +89,7 @@ public class Consumer extends ClientBase {
 	 *            - A JSONObject containing the configuration
 	 * @param hbDirectory
 	 * 			  - A String containing the directory to write heartbeat messages
+	 * Set to null to disable heartbeat messages
 	 */
 	public Consumer(JSONObject configObject, String hbDirectory) {
 		// init

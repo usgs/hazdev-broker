@@ -63,7 +63,7 @@ public class Heartbeat {
 	 * members to provided values.
      * 
      * @param newTime
-	 *            - A Date containing the new origin time to use
+	 *            - A Date containing the new time to use
 	 * @param newTopic
 	 *            - A String containing the topic for this heartbeat
 	 * @param newClientId
@@ -130,7 +130,7 @@ public class Heartbeat {
     }
     
 	/** 
-     * Converts the provided string from a serialized JSON string, populating
+     * Converts the provided serialized JSON string, into the class, populating
 	 * members
 	 * @param jsonString - A string containing the serialized JSON
 	 * @return Returns true if successful, false otherwise

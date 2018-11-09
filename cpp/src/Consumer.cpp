@@ -3,6 +3,7 @@
 #include <limits>
 #include <cmath>
 #include <algorithm>
+#include <ctime>
 
 // Define configuration type
 #define CONFIGTYPE_STRING "ConsumerConfig"

@@ -5,6 +5,7 @@
 #include <string>
 #include <limits>
 #include <cmath>
+#include <ctime>
 
 // Define configuration type
 #define CONFIGTYPE_STRING "ProducerConfig"

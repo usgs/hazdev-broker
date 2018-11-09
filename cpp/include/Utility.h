@@ -7,12 +7,12 @@
 #ifndef HAZDEVBROKER_UTILITY_H
 #define HAZDEVBROKER_UTILITY_H
 
-// needed to disable rapidjson warnings
+// needed to disable rapidjson warnings for clang
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/stringbuffer.h>
+#include <document.h>
+#include <writer.h>
+#include <stringbuffer.h>
 #pragma clang diagnostic pop
 
 #include <exception>

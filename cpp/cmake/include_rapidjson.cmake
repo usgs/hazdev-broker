@@ -4,5 +4,4 @@
 # rapidjson
 set(RAPIDJSON_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/rapidjson" CACHE PATH "Path to rapidjson")
 
-include_directories(${RAPIDJSON_PATH}/..)
 include_directories(${RAPIDJSON_PATH})

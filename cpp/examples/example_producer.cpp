@@ -13,7 +13,7 @@
 #define TOPIC "Topic"
 
 // example logging function
-void logProducer(std::string message) {
+void logProducer(const std::string &message) {
 	std::cerr << message << std::endl;
 }
 

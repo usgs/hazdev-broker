@@ -73,7 +73,7 @@ class Consumer: public ClientBase {
 	 * consumer configuration.
 	 * \param topicConfigJSON - A reference to a rapidjson::Value containing the
 	 * topic configuration.
-	 * /param hbDirectory - A String containing the directory to write heartbeat 
+	 * \param hbDirectory - A String containing the directory to write heartbeat 
 	 * messages, set to empty to disable writting heartbeat messages
 	 */
 	Consumer(rapidjson::Value &configJSON, rapidjson::Value &topicConfigJSON, // NOLINT
@@ -91,7 +91,7 @@ class Consumer: public ClientBase {
 	 * configuration.
 	 * \param topicConfigString - A json formatted std::string containing the
 	 * topic configuration.
-	 * /param hbDirectory - A String containing the directory to write heartbeat 
+	 * \param hbDirectory - A String containing the directory to write heartbeat 
 	 * messages, set to empty to disable writting heartbeat messages
 	 */
 	Consumer(std::string configString, std::string topicConfigString,

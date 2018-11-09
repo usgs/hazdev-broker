@@ -3,6 +3,11 @@
 This is the C++11 implementation of the library used to communicate with the
 Hazdev Broker Cluster.
 
+The library supports sending (producing) and receiving (consuming) messages
+to/from an Apache Kafka Broker Cluster. The library also supports heartbeat
+messages (sent by the producer) to enable better monitoring of broker
+communication.
+
 Dependencies
 ------
 * Hazdev-Broker utilizes [JSON](www.json.org) for formatting.
@@ -13,11 +18,18 @@ this project.
 ([CMakeLists.txt](CMakeLists.txt)) for cross platform compilation.  
 A copy of CMake is not included in this project
 * Hazdev-Broker utilizes [rapidjson](https://github.com/miloyip/rapidjson)
-to format, parse, and write JSON.  A copy of include/rapidjson is included in
+to format, parse, and write JSON.  A copy of rapidjson is included in
 this project.
+* Hazdev-Broker optionally uses [doxygen](http://www.stack.nl/~dimitri/doxygen/) 
+for documentation generation.  A copy of doxygen is optionally downloaded as part 
+of the build.
+* Hazdev-Broker optionally uses [cpplint](https://github.com/google/styleguide/tree/gh-pages/cpplint)
+to check coding style. A copy of cpplint is included in this project.
+* Hazdev-Broker optionally uses [cppcheck](http://cppcheck.sourceforge.net/)
+for static code analysis. A copy of cppcheck is **not** included in this project.
 
 The librdkafa and related dependencies (such as ssl libraries) are linked
-dynamically and are not included in the detection-formats.lib.
+dynamically and are not included in the HazdevBroker library.
 
 Building
 ------
@@ -63,20 +75,19 @@ are:
 Build the examples
 
 1. Open a command window and change directories to `lib/`
-2. Extract the `rapidjson.zip` to `lib/rapidjson/`
-3. Build the librdkafka library in `lib/librdkafka/` by entering the command
+2. Build the librdkafka library in `lib/librdkafka/` by entering the command
 `./configure` followed by the command `make`
-4. Install the librdkafka library by running the command `sudo make install`.
+3. Install the librdkafka library by running the command `sudo make install`.
 This will install rdkafaka to `/usr/local/lib` and `/usr/local/include`.
-5. Generate the example makefiles, by ensuring that `BUILD_EXAMPLES` is enabled
+4. Generate the example makefiles, by ensuring that `BUILD_EXAMPLES` is enabled
 and librdkafka is referenced as part of CMake by adding ``` -DBUILD_EXAMPLES=true -DRDKAFKA=/usr/local/lib/librdkafka++.dylib -DRDKAFKA_PATH=/usr/local/include/librdkafka ```
 to the cmake command.
-6. If you are on a \*nix system, you should see a Makefile in the current
+5. If you are on a \*nix system, you should see a Makefile in the current
 directory.  Just type `make example_consumer` to build the example consumer,
 and `make example_producer` to build the example producer, or type `make all` to
 build both examples and install them to the the location defined by
 `CMAKE_INSTALL_PREFIX`.
-7. If you are on Windows and have Visual Studio installed, a `HazdevBroker.sln`
+6. If you are on Windows and have Visual Studio installed, a `HazdevBroker.sln`
 file and several `.vcproj` files will be created.  You can then build them using
 Visual Studio.  Building the EXAMPLE_CONSUMER and EXAMPLE_PRODUCER projects will
 build the examples.  Building the INSTALL project will copy the examples to the

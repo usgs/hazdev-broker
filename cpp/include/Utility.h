@@ -38,9 +38,6 @@ typedef std::uint8_t byte;
  * to create producer and consumer clients used to connect to the hazdevbroker.
  */
 namespace hazdevbroker {
-
-
-
 	/**
 	 * \brief Convert iso8601 time string to decimal epoch seconds
 	 *
@@ -71,7 +68,8 @@ namespace hazdevbroker {
 	 * Converts the provided string from a serialized json string, populating
 	 * members
 	 * \param jsonstring - A std::string containing the serialized json
-	 * \return Returns 1 if successful, 0 otherwise
+     * \param jsondocument - A reference to the rapidjson::Document to populate
+	 * \return Returns A reference to the populated rapidjson::Document
 	 */
 	rapidjson::Document & FromJSONString(std::string jsonstring,
 										 rapidjson::Document & jsondocument); // NOLINT

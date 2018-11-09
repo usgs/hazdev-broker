@@ -166,7 +166,8 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 	return (conf);
 }
 
-void ClientBase::setLogCallback(std::function<void(std::string)> callback) {
+void ClientBase::setLogCallback(
+		std::function<void(const std::string &)> callback) {
 	m_logCallback = callback;
 }
 

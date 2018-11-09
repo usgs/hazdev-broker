@@ -105,7 +105,7 @@ class ClientBase {
 	 * \param callback - A std::function<void(std::string)> containing the
 	 * callback function
 	 */
-	void setLogCallback(std::function<void(std::string)> callback);
+	void setLogCallback(std::function<void(const std::string &)> callback);
 
  protected:
 	/**
@@ -129,10 +129,10 @@ class ClientBase {
 
  private:
 	/**
-	 * \brief A std::function<void(std::string)> containing the optional logging
-	 * callback.
+	 * \brief A std::function<void(const std::string &)> containing the optional 
+	 * logging callback.
 	 */
-	std::function<void(std::string)> m_logCallback;
+	std::function<void(const std::string &)> m_logCallback;
 };
 }  // namespace hazdevbroker
 #endif  // HAZDEVBROKER_CLIENTBASE_H

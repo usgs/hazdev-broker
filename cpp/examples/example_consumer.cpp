@@ -4,9 +4,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <cstdio>
-
-//#include <csignal>
-//#include <cstring>
+#include <ctime>
 
 #include "Consumer.h"
 

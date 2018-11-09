@@ -116,21 +116,21 @@ class Heartbeat  {
 	 *
 	 * A required double containing the time for this heartbeat
 	 */
-	double time;
+	double m_dTime;
 
 	/**
 	 * \brief Heartbeat topic
 	 *
 	 * An optional std::string containing the topic for this Heartbeat.
 	 */
-	std::string topic;
+	std::string m_sTopic;
 
 	/**
 	 * \brief Heartbeat clientId code
 	 *
 	 * A required std::string containing the clientId for this Heartbeat.
 	 */
-	std::string clientId;
+	std::string m_sClientId;
 };
 }  // namespace hazdevbroker
 #endif  // HAZDEVBROKER_HEARTBEAT_H

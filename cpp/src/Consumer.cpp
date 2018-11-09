@@ -300,12 +300,12 @@ void Consumer::handleHeartbeat(hazdevbroker::Heartbeat aHeartbeat) {
 
 	// is this heartbeat for one of the configured topics
 	// we don't want to handle hearbeats for other topics
-	if(std::find(m_TopicList.begin(), m_TopicList.end(), aHeartbeat.topic)
+	if(std::find(m_TopicList.begin(), m_TopicList.end(), aHeartbeat.m_sTopic)
 			== m_TopicList.end()) {
 		return;
 	}
 
-	// set the time the heartbeat was recieved in case our
+	// set the time the heartbeat was received in case our
 	// caller is monitoring this
 	setLastHeartbeatTime(std::time(NULL));
 

@@ -20,22 +20,22 @@ namespace hazdevbroker {
 #define CLIENTID_KEY "ClientId"
 
 Heartbeat::Heartbeat() {
-    time = std::numeric_limits<double>::quiet_NaN();
-    topic = "";
-    clientId = "";
+    m_dTime = std::numeric_limits<double>::quiet_NaN();
+    m_sTopic = "";
+    m_sClientId = "";
 }
 
 Heartbeat::Heartbeat(double newTime, std::string newTopic,
         std::string newClientId) {
-    time = newTime;
-    topic = newTopic;
-    clientId = newClientId;
+    m_dTime = newTime;
+    m_sTopic = newTopic;
+    m_sClientId = newClientId;
 }
 
 Heartbeat::Heartbeat(const Heartbeat & newHeartbeat) {
-    time = newHeartbeat.time;
-    topic = newHeartbeat.topic;
-    clientId = newHeartbeat.clientId;
+    m_dTime = newHeartbeat.m_dTime;
+    m_sTopic = newHeartbeat.m_sTopic;
+    m_sClientId = newHeartbeat.m_sClientId;
 }
 
 Heartbeat::~Heartbeat() {
@@ -51,39 +51,39 @@ std::string Heartbeat::toJSONString() {
         json.GetAllocator());
     json.AddMember(TYPE_KEY, typeValue, json.GetAllocator());
 
-    // time
-	if (std::isnan(time) != true) {
-		std::string timeString = ConvertEpochTimeToISO8601(time);
+    // m_dTime
+	if (std::isnan(m_dTime) != true) {
+		std::string timeString = convertEpochTimeToISO8601(m_dTime);
 		rapidjson::Value timeValue;
 		timeValue.SetString(rapidjson::StringRef(timeString.c_str()),
 							json.GetAllocator());
 		json.AddMember(TIME_KEY, timeValue, json.GetAllocator());
 	}
 
-	// topic
-	if (topic != "") {
+	// m_sTopic
+	if (m_sTopic != "") {
 		rapidjson::Value topicValue;
-		topicValue.SetString(rapidjson::StringRef(topic.c_str()),
+		topicValue.SetString(rapidjson::StringRef(m_sTopic.c_str()),
 			json.GetAllocator());
 		json.AddMember(TOPIC_KEY, topicValue, json.GetAllocator());
 	}
 
-	// clientId
-	if (clientId != "") {
+	// m_sClientId
+	if (m_sClientId != "") {
 		rapidjson::Value clientIdValue;
-		clientIdValue.SetString(rapidjson::StringRef(clientId.c_str()),
+		clientIdValue.SetString(rapidjson::StringRef(m_sClientId.c_str()),
 			json.GetAllocator());
 		json.AddMember(CLIENTID_KEY, clientIdValue, json.GetAllocator());
 	}
 
-    return(hazdevbroker::ToJSONString(json));
+    return(hazdevbroker::toJSONString(json));
 }
 
 bool Heartbeat::fromJSONString(std::string jsonString) {
     try {
         // convert from json
         rapidjson::Document jsonDocument;
-        rapidjson::Value &json = hazdevbroker::FromJSONString(jsonString,
+        rapidjson::Value &json = hazdevbroker::fromJSONString(jsonString,
             jsonDocument);
 
         // type
@@ -102,29 +102,29 @@ bool Heartbeat::fromJSONString(std::string jsonString) {
         // time
         if ((json.HasMember(TIME_KEY) == true)
                 && (json[TIME_KEY].IsString() == true)) {
-            time = hazdevbroker::ConvertISO8601ToEpochTime(
+            m_dTime = hazdevbroker::convertISO8601ToEpochTime(
                     std::string(json[TIME_KEY].GetString(),
                                 json[TIME_KEY].GetStringLength()));
         } else {
-            time = std::numeric_limits<double>::quiet_NaN();
+            m_dTime = std::numeric_limits<double>::quiet_NaN();
         }
 
         // topic
         if ((json.HasMember(TOPIC_KEY) == true) &&
             (json[TOPIC_KEY].IsString() == true)) {
-            topic = std::string(json[TOPIC_KEY].GetString(),
+            m_sTopic = std::string(json[TOPIC_KEY].GetString(),
                                 json[TOPIC_KEY].GetStringLength());
         } else {
-            topic = "";
+            m_sTopic = "";
         }
 
         // clientId
         if ((json.HasMember(CLIENTID_KEY) == true) &&
             (json[CLIENTID_KEY].IsString() == true)) {
-            clientId = std::string(json[CLIENTID_KEY].GetString(),
+            m_sClientId = std::string(json[CLIENTID_KEY].GetString(),
                                 json[CLIENTID_KEY].GetStringLength());
         } else {
-            clientId = "";
+            m_sClientId = "";
         }
     } catch (const std::exception&) {
         return(false);
@@ -141,9 +141,9 @@ void Heartbeat::writeToDisk(std::string heartbeatDirectory) {
         return;
     }
 
-     // build heartbeat filename from the topic name and client id
+     // build heartbeat filename from the m_sTopic name and client id
     std::string heartbeatFileName = heartbeatDirectory + "/" +
-        topic + "_" + clientId + ".heartbeat";
+        m_sTopic + "_" + m_sClientId + ".heartbeat";
 
     // create file
 	std::ofstream hbFile;
@@ -187,19 +187,19 @@ std::vector<std::string> Heartbeat::getErrors() {
 
     // Required Keys
     // time
-	if (std::isnan(time) == true) {
+	if (std::isnan(m_dTime) == true) {
 		errorList.push_back("No Time in Heartbeat Class.");
 	}
 
 	// topic
-	if (topic == "") {
-		// empty topic
+	if (m_sTopic == "") {
+		// empty m_sTopic
 		errorList.push_back("Empty Topic in Heartbeat Class.");
 	}
 
 	// clientId
-	if (clientId == "") {
-		// empty clientId
+	if (m_sClientId == "") {
+		// empty m_sClientId
 		errorList.push_back("Empty Client Id in Heartbeat Class.");
 	}
 

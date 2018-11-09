@@ -12,7 +12,7 @@ namespace hazdevbroker {
 // stored after the first call to ConvertISO8601ToEpochTime()
 #define MAXENV 128
 char envTZ[MAXENV];
-double ConvertISO8601ToEpochTime(std::string TimeString) {
+double convertISO8601ToEpochTime(std::string TimeString) {
 	// make sure we got something
 	if (TimeString.length() == 0) {
 		return (-1.0);
@@ -130,7 +130,7 @@ double ConvertISO8601ToEpochTime(std::string TimeString) {
 	return (usableTime + seconds);
 }
 
-std::string ConvertEpochTimeToISO8601(double epochtime) {
+std::string convertEpochTimeToISO8601(double epochtime) {
 	time_t time = static_cast<int>(epochtime);
 	double decimalseconds = epochtime - static_cast<int>(time);
 
@@ -155,7 +155,7 @@ std::string ConvertEpochTimeToISO8601(double epochtime) {
 	return (timestring + secondsstring + "Z");
 }
 
-std::string ToJSONString(rapidjson::Value &json) { // NOLINT
+std::string toJSONString(rapidjson::Value &json) { // NOLINT
 	// make the buffer
 	rapidjson::StringBuffer jsonbuffer;
 
@@ -169,7 +169,7 @@ std::string ToJSONString(rapidjson::Value &json) { // NOLINT
 	return (std::string(jsonbuffer.GetString()));
 }
 
-rapidjson::Document & FromJSONString(std::string jsonstring,
+rapidjson::Document & fromJSONString(std::string jsonstring,
 										rapidjson::Document & jsondocument) { // NOLINT
 	// parse the json into a document
 	if (jsondocument.Parse(jsonstring.c_str()).HasParseError()) {

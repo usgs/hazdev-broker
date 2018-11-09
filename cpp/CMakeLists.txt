@@ -31,74 +31,16 @@ option(RUN_CPPCHECK "Run CPP Checks (requires cppcheck installed)" OFF)
 option(RUN_CPPLINT "Run CPP Checks (requires cpplint and python installed)" OFF)
 option(GIT_CLONE_PUBLIC "Clone from public git URLs (https)" OFF)
 
-# ----- EXTERNAL TOOLS ----- #
-# cpplint
-if (RUN_CPPLINT)
-    set(PYTHON_PATH "/usr/bin/python" CACHE FILEPATH "Path to python")
-    set(CPPLINT_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/cpplint/cpplint.py" CACHE FILEPATH "Path to cpplint")
-else()
-    set(PYTHON_PATH "")
-    set(CPPLINT_PATH "")
-endif(RUN_CPPLINT)
-
-# cppcheck
-if (RUN_CPPCHECK)
-    set(CPPCHECK_PATH "/usr/local/bin/cppcheck" CACHE FILEPATH "Path to cppcheck")
-else()
-    set(CPPCHECK_PATH "")
-endif(RUN_CPPCHECK)
-
-# Doxygen
-if (BUILD_DOCUMENTATION)
-    # ----- LOOK FOR DOXYGEN ----- #
-    find_package(Doxygen)
-
-    # ----- DOWNLOAD DOXYGEN IF NOT FOUND ----- #
-    if(NOT DOXYGEN_FOUND)
-        MESSAGE(STATUS "Configuring to download Doxygen.")
-
-        if (GIT_CLONE_PUBLIC)
-          ExternalProject_Add(
-              Doxygen
-              GIT_REPOSITORY https://github.com/doxygen/doxygen.git
-              GIT_TAG Release_1_8_12
-              TIMEOUT 10
-              CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${INSTALL_LOCATION}
-          )
-        else()
-          ExternalProject_Add(
-              Doxygen
-              GIT_REPOSITORY git@github.com:doxygen/doxygen.git
-              GIT_TAG Release_1_8_12
-              TIMEOUT 10
-              CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${INSTALL_LOCATION}
-          )
-        endif()
-
-        set(DOXYGEN_DEPEND "Doxygen")
-    endif()
-endif(BUILD_DOCUMENTATION)
-
 # ----- EXTERNAL LIBRARIES ----- #
 # rapidjson
-set(RAPIDJSON_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/rapidjson" CACHE PATH "Path to rapidjson")
+include(${CMAKE_DIR}/include_rapidjson.cmake)
 
 # ----- BROKER LIBRARIES ----- #
-# rdkafka
-set(LIBRDKAFKA_PATH
-    "${CMAKE_CURRENT_LIST_DIR}/lib/rdkafka/"
-    CACHE PATH "Path to rdkafka")
-set(LIBRDKAFKA_C_LIB
-    "${CMAKE_CURRENT_LIST_DIR}/lib/rdkafka/src/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka${CMAKE_SHARED_LIBRARY_SUFFIX}"
-    CACHE FILEPATH "Path to the rdkafka c library")
-set(LIBRDKAFKA_CPP_LIB
-    "${CMAKE_CURRENT_LIST_DIR}/lib/rdkafka/src_cpp/${CMAKE_SHARED_LIBRARY_PREFIX}rdkafka++${CMAKE_SHARED_LIBRARY_SUFFIX}"
-    CACHE FILEPATH "Path to the rdkafka cpp library")
+# librdkafka
+include(${CMAKE_DIR}/include_librdkafka.cmake)
 
 # ----- SET PROJECT INCLUDE DIRECTORIES ----- #
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${RAPIDJSON_PATH}/..)
-include_directories(${RAPIDJSON_PATH})
 
 # ----- SET SOURCE FILES ----- #
 file(GLOB SRCS ${PROJECT_SOURCE_DIR}/src/*.cpp)
@@ -114,9 +56,6 @@ include(${CMAKE_DIR}/install_lib.cmake)
 
 # ----- BUILD EXAMPLES ----- #
 if (BUILD_EXAMPLES)
-    # librdkafka
-    include(${CMAKE_DIR}/include_librdkafka.cmake)
-
     # ----- BUILD EXECUTABLE ----- #
     # WARNING: linking order of libraries matters for G++
     set(EXE_LIBRARIES HazdevBroker ${LIBRDKAFKA_CPP_LIB} ${LIBRDKAFKA_C_LIB})

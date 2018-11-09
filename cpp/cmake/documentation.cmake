@@ -16,8 +16,32 @@ option(GENERATE_DOCUMENTATION "Runs Doxygen (requires Doxygen installed)" OFF)
 # ----- DOXYGEN ----- #
 if(GENERATE_DOCUMENTATION)
     # ----- LOOK FOR DOXYGEN ----- #
-    # will fail CMake if not found
-    find_package(Doxygen REQUIRED)
+    find_package(Doxygen)
+
+    # ----- DOWNLOAD DOXYGEN IF NOT FOUND ----- #
+    if(NOT DOXYGEN_FOUND)
+        MESSAGE(STATUS "Configuring to download Doxygen.")
+
+        if (GIT_CLONE_PUBLIC)
+          ExternalProject_Add(
+              Doxygen
+              GIT_REPOSITORY https://github.com/doxygen/doxygen.git
+              GIT_TAG Release_1_8_12
+              TIMEOUT 10
+              CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${INSTALL_LOCATION}
+          )
+        else()
+          ExternalProject_Add(
+              Doxygen
+              GIT_REPOSITORY git@github.com:doxygen/doxygen.git
+              GIT_TAG Release_1_8_12
+              TIMEOUT 10
+              CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${INSTALL_LOCATION}
+          )
+        endif()
+
+        set(DOXYGEN_DEPEND "Doxygen")
+    endif()
 
     # generate doxygen configuration file
     set(doxyfile_in ${CMAKE_CURRENT_LIST_DIR}/Doxyfile.in)

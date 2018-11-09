@@ -244,7 +244,7 @@ byte * Consumer::poll(int64_t timeout, size_t *datalength) {
 			handleHeartbeat(m_HeartbeatProcessor);
 
 			// cleanup heartbeat
-			delete (data);
+			delete [] (data);
 
 			// we don't return anything for heartbeats
 			*datalength = 0;

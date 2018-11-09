@@ -6,17 +6,16 @@
  ****************************************/
 #ifndef HAZDEVBROKER_UTILITY_H
 #define HAZDEVBROKER_UTILITY_H
+#include <exception>
+#include <string>
 
 // needed to disable rapidjson warnings for clang
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
-#include <document.h>
-#include <writer.h>
-#include <stringbuffer.h>
+#include "document.h" // NOLINT
+#include "writer.h" // NOLINT
+#include "stringbuffer.h"  // NOLINT
 #pragma clang diagnostic pop
-
-#include <exception>
-#include <string>
 
 /**
  * \typedef byte

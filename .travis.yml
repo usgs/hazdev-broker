@@ -10,14 +10,7 @@ addons:
   apt:
     packages:
       - g++-5
-      - gcc-5
-      - openssl
-      - liblz4
-      - libsasl2
-      - librt
-      - libdl
-      - libpthread
-      - libssl-dev      
+      - gcc-5 
       - cppcheck
       - doxygen
       - doxygen-doc

@@ -4,6 +4,8 @@
 #include <cmath>
 #include <algorithm>
 #include <ctime>
+#include <vector>
+#include <string>
 
 // Define configuration type
 #define CONFIGTYPE_STRING "ConsumerConfig"
@@ -33,7 +35,6 @@ Consumer::Consumer(rapidjson::Value &configJSON, // NOLINT
 }
 
 Consumer::Consumer(std::string configString, std::string topicConfigString) {
-
 	// init
 	m_pConsumer = NULL;
 	m_sConfigType = std::string(CONFIGTYPE_STRING);
@@ -60,7 +61,6 @@ Consumer::Consumer(rapidjson::Value &configJSON, // NOLINT
 
 Consumer::Consumer(std::string configString, std::string topicConfigString,
 		std::string hbDirectory) {
-
 	// init
 	m_pConsumer = NULL;
 	m_sConfigType = std::string(CONFIGTYPE_STRING);

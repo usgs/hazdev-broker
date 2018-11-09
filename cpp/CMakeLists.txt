@@ -54,6 +54,12 @@ include(${CMAKE_DIR}/build_lib.cmake)
 # ----- INSTALL LIBRARY ----- #
 include(${CMAKE_DIR}/install_lib.cmake)
 
+# ----- RUN CPPCHECK ----- #
+include(${CMAKE_DIR}/cppcheck.cmake)
+
+# ----- RUN CPPLINT ----- #
+include(${CMAKE_DIR}/cpplint.cmake)
+
 # ----- BUILD EXAMPLES ----- #
 if (BUILD_EXAMPLES)
     # ----- BUILD EXECUTABLE ----- #
@@ -86,12 +92,6 @@ if (BUILD_EXAMPLES)
     set(EXE_PARAMS "${PROJECT_SOURCE_DIR}/examples/producer.config")
     include(${CMAKE_DIR}/install_exe.cmake)
 endif ()
-
-# ----- RUN CPPCHECK ----- #
-include(${CMAKE_DIR}/cppcheck.cmake)
-
-# ----- RUN CPPLINT ----- #
-include(${CMAKE_DIR}/cpplint.cmake)
 
 # ----- GENERATE DOCUMENTATION ----- #
 set(DOC_DIRS "${PROJECT_SOURCE_DIR}/include/ ${PROJECT_SOURCE_DIR}/examples/")

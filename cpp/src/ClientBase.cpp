@@ -1,6 +1,7 @@
 #include <ClientBase.h>
 #include <rdkafkacpp.h>
 #include <limits>
+#include <string>
 
 // JSON Keys
 #define TYPE_KEY "Type"
@@ -88,7 +89,7 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 		if (strncmp(itr->name.GetString(), CLIENT_ID, sizeof(CLIENT_ID)) == 0) {
 			m_sClientId = itr->value.GetString();
 		}
- 
+
 		if (conf->set(itr->name.GetString(), itr->value.GetString(), errstr)
 				!= RdKafka::Conf::CONF_OK) {
 			log("Error setting configuration entry: " +

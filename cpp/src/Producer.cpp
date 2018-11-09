@@ -6,6 +6,7 @@
 #include <limits>
 #include <cmath>
 #include <ctime>
+#include <algorithm>
 
 // Define configuration type
 #define CONFIGTYPE_STRING "ProducerConfig"

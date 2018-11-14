@@ -80,7 +80,8 @@ int main(int argc, char **argv) {
 	m_Producer->setLogCallback(std::bind(&logProducer, std::placeholders::_1));
 	// set up producer
 	m_Producer->setup(brokerConfig, topicConfig);
-	// set heartbeat interval
+	// set heartbeat interval to -1 so that the producer always sends
+	// heartbeats
 	m_Producer->setHeartbeatInterval(-1);
 
 	// create topic handle

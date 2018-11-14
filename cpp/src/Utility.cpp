@@ -79,7 +79,8 @@ double convertISO8601ToEpochTime(std::string TimeString) {
 	// set the DST-offset to 0
 	_daylight = 0;
 
-	// ensure _tzset() has been called, so that it isn't called again.
+	// ensure _tzset() has been called, so that it isn't called again
+	// automatically in mktime.
 	_tzset();
 
 	// convert to epoch time

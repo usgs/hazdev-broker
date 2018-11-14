@@ -72,8 +72,8 @@ class Producer: public ClientBase {
 	 * \param topicConfigJSON - A reference to a rapidjson::Value containing the
 	 * topic configuration.
 	 * \param hbInterval - An int64_t containing the heartbeat interval, set to
-	 *  -1  to always send heartbeat messages, set to NAN to disable heartbeat 
-	 * messages
+	 *  -1  to send heartbeats with every message, set to NAN to disable 
+	 * heartbeat messages
 	 */
 	Producer(rapidjson::Value &configJSON, rapidjson::Value &topicConfigJSON, // NOLINT
 			int64_t hbInterval);
@@ -91,8 +91,8 @@ class Producer: public ClientBase {
 	 * \param topicConfigString - A json formatted std::string containing the
 	 * topic configuration.
 	 * \param hbInterval - An int64_t containing the heartbeat interval, set to
-	 *  -1  to always send heartbeat messages, set to NAN to disable heartbeat 
-	 * messages
+	 *  -1  to send heartbeats with every message, set to NAN to disable 
+	 * heartbeat messages
 	 */
 	Producer(std::string configString, std::string topicConfigString, // NOLINT
 			int64_t hbInterval);
@@ -214,7 +214,8 @@ class Producer: public ClientBase {
 
 	/**
 	 * Long defining the number seconds between sending heartbeat messages, 
-	 * default is 30 seconds, set to -1 to always send heartbeat messages, set 
+	 * default is 30 seconds, set to -1 to send a heartbeat message every time
+	 * sendHeartbeat() is called (either directly or via send/sendString), set 
 	 * to NAN to disable heartbeat messages
 	 */
 	int64_t m_lHeartbeatInterval;

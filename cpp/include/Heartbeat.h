@@ -114,7 +114,8 @@ class Heartbeat  {
 	/**
 	 * \brief Heartbeat time
 	 *
-	 * A required double containing the time for this heartbeat
+	 * A required double containing the time for this heartbeat in epoch time
+     * (seconds since 1970)
 	 */
 	double m_dTime;
 

@@ -126,13 +126,19 @@ public class ExampleConsumer {
 		// run until stopped
 		while (true) {
 
-			// get message from broker
-			ArrayList<String> brokerMessages = m_Consumer.pollString(100);
+			try {
+				// get message from broker
+				ArrayList<String> brokerMessages = m_Consumer.pollString(100);
 
-			// print messages
-			for (int i = 0; i < brokerMessages.size(); i++) {
-				System.out.println(brokerMessages.get(i));
-			}
+				// print messages
+				for (int i = 0; i < brokerMessages.size(); i++) {
+					System.out.println(brokerMessages.get(i));
+				}
+			} catch	(Exception e) {
+
+				// log exception
+				System.out.println(e.toString());
+			}	
 		}
 	}
 }

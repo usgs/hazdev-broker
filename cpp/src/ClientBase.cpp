@@ -1,11 +1,13 @@
-#include "ClientBase.h"
-#include "rdkafkacpp.h"
+#include <ClientBase.h>
+#include <rdkafkacpp.h>
 #include <limits>
+#include <string>
 
 // JSON Keys
 #define TYPE_KEY "Type"
 #define PROPERTIES_KEY "Properties"
 #define TOPICTYPE_STRING "TopicConfig"
+#define CLIENT_ID "client.id"
 
 namespace hazdevbroker {
 
@@ -14,7 +16,6 @@ ClientBase::ClientBase() {
 }
 
 ClientBase::~ClientBase() {
-
 	/*
 	 * Wait for RdKafka to decommission.
 	 * This is not strictly needed (with check outq_len() above), but
@@ -27,7 +28,6 @@ ClientBase::~ClientBase() {
 
 RdKafka::Conf * ClientBase::convertJSONStringToProp(std::string configString,
 		std::string topicConfigString) {
-
 	// use a document parse to convert from a string
 	rapidjson::Document configJSON;
 	if (configJSON.Parse(configString.c_str()).HasParseError()) {
@@ -48,17 +48,15 @@ RdKafka::Conf * ClientBase::convertJSONStringToProp(std::string configString,
 
 RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 		rapidjson::Value &configJSON, rapidjson::Value &topicConfigJSON) {
-
 	std::string errstr;
 
 	// check the type to ensure that this configuration is for the
-	// consumer
+	// the correct type
 	if ((configJSON.HasMember(TYPE_KEY) == true)
 			&& (configJSON[TYPE_KEY].IsString() == true)) {
 		std::string configType = configJSON[TYPE_KEY].GetString();
 		if (configType != m_sConfigType) {
-			log(
-					"Error, Configuration is not for: " + m_sConfigType
+			log("Error, Configuration is not for: " + m_sConfigType
 							+ ", it is for: " + configType);
 			return (NULL);
 		}
@@ -69,8 +67,7 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 
 	// check for properties object
 	if (configJSON.HasMember(PROPERTIES_KEY) == false) {
-		log(
-				"Error, " + std::string(PROPERTIES_KEY)
+		log("Error, " + std::string(PROPERTIES_KEY)
 						+ " missing from configuration.");
 		return (NULL);
 	} else if (configJSON[PROPERTIES_KEY].IsObject() == false) {
@@ -88,6 +85,11 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 	for (rapidjson::Value::ConstMemberIterator itr =
 			propertiesObject.MemberBegin(); itr != propertiesObject.MemberEnd();
 			++itr) {
+		// remember the client id for later
+		if (strncmp(itr->name.GetString(), CLIENT_ID, sizeof(CLIENT_ID)) == 0) {
+			m_sClientId = itr->value.GetString();
+		}
+
 		if (conf->set(itr->name.GetString(), itr->value.GetString(), errstr)
 				!= RdKafka::Conf::CONF_OK) {
 			log("Error setting configuration entry: " +
@@ -96,11 +98,10 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 				errstr);
 			return (NULL);
 		}
-
 	}
 
 	// topic
-	RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+	RdKafka::Conf *topicConfig = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
 
 	// were we given one
 	if (topicConfigJSON.IsObject() == true) {
@@ -138,11 +139,11 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 		rapidjson::Value & topicPropertiesObject =
 				topicConfigJSON[PROPERTIES_KEY];
 
-		// add all the key/values in the tpic properties object to the config
+		// add all the key/values in the topic properties object to the config
 		for (rapidjson::Value::ConstMemberIterator itr =
 				topicPropertiesObject.MemberBegin();
 				itr != topicPropertiesObject.MemberEnd(); ++itr) {
-			if (tconf->set(itr->name.GetString(), itr->value.GetString(),
+			if (topicConfig->set(itr->name.GetString(), itr->value.GetString(),
 					errstr) != RdKafka::Conf::CONF_OK) {
 				log("Error setting topic configuration entry: " +
 					std::string(itr->name.GetString()) + " value: " +
@@ -156,22 +157,22 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 	}
 
 	// set the topic config into the overall config
-	if (conf->set("default_topic_conf", tconf, errstr)
+	if (conf->set("default_topic_conf", topicConfig, errstr)
 			!= RdKafka::Conf::CONF_OK) {
 		log("Error setting default topic configuration entry: " + errstr);
 		return (NULL);
 	}
-	delete tconf;
+	delete (topicConfig);
 
 	return (conf);
 }
 
-void ClientBase::setLogCallback(std::function<void(std::string)> callback) {
+void ClientBase::setLogCallback(
+		std::function<void(const std::string &)> callback) {
 	m_logCallback = callback;
 }
 
 void ClientBase::log(std::string logMessage) {
-
 	// use the callback if it's available
 	if (m_logCallback) {
 		m_logCallback(logMessage);
@@ -179,5 +180,4 @@ void ClientBase::log(std::string logMessage) {
 		std::cerr << logMessage.c_str() << std::endl;
 	}
 }
-
-}
+}  // namespace hazdevbroker

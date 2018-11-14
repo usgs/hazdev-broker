@@ -103,7 +103,7 @@ public class ExampleProducer {
 		}
 
 		// create producer
-		Producer m_Producer = new Producer(brokerConfig);
+		Producer m_Producer = new Producer(brokerConfig, null);
 
 		// run until stopped
 		while (true) {

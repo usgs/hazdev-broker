@@ -4,9 +4,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <cstdio>
-
-//#include <csignal>
-//#include <cstring>
+#include <ctime>
 
 #include "Consumer.h"
 
@@ -21,7 +19,6 @@ void logConsumer(std::string message) {
 }
 
 int main(int argc, char **argv) {
-
 	if (argc != 2) {
 		std::cerr << "Usage: " << argv[0] << " <configfile>" << std::endl;
 		exit(1);
@@ -88,18 +85,42 @@ int main(int argc, char **argv) {
 	m_Consumer->setLogCallback(std::bind(&logConsumer, std::placeholders::_1));
 	// set up consumer, set up default topic config
 	m_Consumer->setup(brokerConfig, topicConfig);
+	// set heartbeat directory
+	m_Consumer->setHeartbeatDirectory("./");
+
 	// subscribe to topics
 	m_Consumer->subscribe(topicList);
 
+	int64_t heartbeatInterval = 120;
+
 	// run until stopped
 	while (true) {
-
 		// get message from broker
 		std::string brokerMessage = m_Consumer->pollString(100);
 
 		// print message
 		if (brokerMessage != "") {
 			std::cout << brokerMessage << std::endl;
+		}
+
+		// get current time in seconds
+		int64_t timeNow = std::time(NULL);
+
+		// get last heartbeat time
+		int64_t lastHB = m_Consumer->getLastHeartbeatTime();
+
+		// calculate elapsed time
+		int64_t elapsedTime = timeNow - lastHB;
+
+		// has it been too long since the last heartbeat?
+		if (elapsedTime > heartbeatInterval) {
+			std::cout << "No Heartbeat Message seen from topic(s)" <<
+				" in " << std::to_string(heartbeatInterval) << " seconds! (" <<
+				std::to_string(elapsedTime) << ")" << std::endl;
+
+			// reset last heartbeat time so that we don't fill the
+			// log
+			m_Consumer->setLastHeartbeatTime(timeNow);
 		}
 	}
 

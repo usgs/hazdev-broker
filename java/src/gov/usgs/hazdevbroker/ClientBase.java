@@ -45,9 +45,8 @@ public class ClientBase {
 	public Properties convertJSONStringToProp(String configString)
 			throws ParseException {
 
-		// use a parser to convert from a string
-		JSONParser configParser = new JSONParser();
-		JSONObject configObject = (JSONObject) configParser.parse(configString);
+		// convert from a string
+		JSONObject configObject = Utility.fromJSONString(configString);
 
 		return (convertJSONConfigToProp(configObject));
 	}

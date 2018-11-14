@@ -13,12 +13,11 @@
 #define TOPIC "Topic"
 
 // example logging function
-void logProducer(std::string message) {
+void logProducer(const std::string &message) {
 	std::cerr << message << std::endl;
 }
 
 int main(int argc, char **argv) {
-
 	if (argc != 2) {
 		std::cerr << "Usage: " << argv[0] << " <configfile>" << std::endl;
 		exit(1);
@@ -81,6 +80,10 @@ int main(int argc, char **argv) {
 	m_Producer->setLogCallback(std::bind(&logProducer, std::placeholders::_1));
 	// set up producer
 	m_Producer->setup(brokerConfig, topicConfig);
+	// set heartbeat interval to -1 so that the producer always sends
+	// heartbeats
+	m_Producer->setHeartbeatInterval(-1);
+
 	// create topic handle
 	RdKafka::Topic * m_ProducerTopic = m_Producer->createTopic(producerTopic);
 
@@ -88,7 +91,6 @@ int main(int argc, char **argv) {
 	std::string consoleMessage = "";
 	std::cout << "Type <quit> to stop sending messages." << std::endl;
 	while (true) {
-
 		// get message from input
 		std::getline(std::cin, consoleMessage);
 

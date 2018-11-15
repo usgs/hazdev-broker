@@ -80,9 +80,9 @@ int main(int argc, char **argv) {
 	m_Producer->setLogCallback(std::bind(&logProducer, std::placeholders::_1));
 	// set up producer
 	m_Producer->setup(brokerConfig, topicConfig);
-	// set heartbeat interval to -1 so that the producer always sends
+	// set heartbeat interval to 0 so that the producer always sends
 	// heartbeats
-	m_Producer->setHeartbeatInterval(-1);
+	m_Producer->setHeartbeatInterval(0);
 
 	// create topic handle
 	RdKafka::Topic * m_ProducerTopic = m_Producer->createTopic(producerTopic);

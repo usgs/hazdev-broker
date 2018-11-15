@@ -17,7 +17,7 @@ Producer::Producer() {
 	// init
 	m_pProducer = NULL;
 	m_sConfigType = std::string(CONFIGTYPE_STRING);
-	m_lHeartbeatInterval = std::numeric_limits<int64_t>::quiet_NaN();
+	m_iHeartbeatInterval = -1;
 	m_lLastHeartbeatTime = std::time(NULL);
 }
 
@@ -26,7 +26,7 @@ Producer::Producer(rapidjson::Value &configJSON,
 	// init
 	m_pProducer = NULL;
 	m_sConfigType = std::string(CONFIGTYPE_STRING);
-	m_lHeartbeatInterval = std::numeric_limits<int64_t>::quiet_NaN();
+	m_iHeartbeatInterval = -1;
 	m_lLastHeartbeatTime = std::time(NULL);
 
 	// setup using json
@@ -37,7 +37,7 @@ Producer::Producer(std::string configString, std::string topicConfigString) {
 	// init
 	m_pProducer = NULL;
 	m_sConfigType = std::string(CONFIGTYPE_STRING);
-	m_lHeartbeatInterval = std::numeric_limits<int64_t>::quiet_NaN();
+	m_iHeartbeatInterval = -1;
 	m_lLastHeartbeatTime = std::time(NULL);
 
 	// setup using a string
@@ -45,11 +45,11 @@ Producer::Producer(std::string configString, std::string topicConfigString) {
 }
 
 Producer::Producer(rapidjson::Value &configJSON,
-		rapidjson::Value &topicConfigJSON, int64_t hbInterval) {
+		rapidjson::Value &topicConfigJSON, int hbInterval) {
 	// init
 	m_pProducer = NULL;
 	m_sConfigType = std::string(CONFIGTYPE_STRING);
-	m_lHeartbeatInterval = hbInterval;
+	m_iHeartbeatInterval = hbInterval;
 	m_lLastHeartbeatTime = std::time(NULL);
 
 	// setup using json
@@ -57,11 +57,11 @@ Producer::Producer(rapidjson::Value &configJSON,
 }
 
 Producer::Producer(std::string configString, std::string topicConfigString,
-		int64_t hbInterval) {
+		int hbInterval) {
 	// init
 	m_pProducer = NULL;
 	m_sConfigType = std::string(CONFIGTYPE_STRING);
-	m_lHeartbeatInterval = hbInterval;
+	m_iHeartbeatInterval = hbInterval;
 	m_lLastHeartbeatTime = std::time(NULL);
 
 	// setup using a string
@@ -177,46 +177,48 @@ void Producer::send(RdKafka::Topic *topic, byte* data, size_t dataLength) {
 
 void Producer::sendHeartbeat(RdKafka::Topic *topic) {
 	// don't send heartbeat if it's disabled
-	if (std::isnan(m_lHeartbeatInterval) != true) {
-		// get current time in seconds
-		int64_t timeNow = std::time(NULL);
+	if (m_iHeartbeatInterval < 0) {
+		return;
+	}
 
-		// calculate elapsed time
-		int64_t elapsedTime = timeNow - m_lHeartbeatInterval;
+	// get current time in seconds
+	int64_t timeNow = std::time(NULL);
 
-		// has it been long enough since the last heartbeat?
-		// or are we always sending heartbeats?
-		if ((elapsedTime >= m_lHeartbeatInterval) ||
-				(m_lHeartbeatInterval < 0)) {
-			// create the heartbeat
-			Heartbeat newHeartbeat(timeNow, topic->name(), m_sClientId);
+	// calculate elapsed time
+	int64_t elapsedTime = timeNow - m_lLastHeartbeatTime;
 
-			// send the heartbeat
-			if (newHeartbeat.isValid()) {
-				std::string heartbeatString = newHeartbeat.toJSONString();
+	// has it been long enough since the last heartbeat?
+	// or are we always sending heartbeats?
+	if ((elapsedTime >= m_iHeartbeatInterval) ||
+			(m_iHeartbeatInterval == 0)) {
+		// create the heartbeat
+		Heartbeat newHeartbeat(timeNow, topic->name(), m_sClientId);
 
-				byte * heartbeatData = new byte[heartbeatString.length()];
-				std::copy(heartbeatString.begin(), heartbeatString.end(),
-					heartbeatData);
+		// send the heartbeat
+		if (newHeartbeat.isValid()) {
+			std::string heartbeatString = newHeartbeat.toJSONString();
 
-				// send heartbeat to kafka
-				RdKafka::ErrorCode resp = m_pProducer->produce(topic,
-					RdKafka::Topic::PARTITION_UA, RdKafka::Producer::RK_MSG_COPY,
-					heartbeatData, heartbeatString.size(), NULL, NULL);
+			byte * heartbeatData = new byte[heartbeatString.length()];
+			std::copy(heartbeatString.begin(), heartbeatString.end(),
+				heartbeatData);
 
-				// were there any errors
-				if (resp != RdKafka::ERR_NO_ERROR) {
-					log("Error producing heartbeat to topic: "
-						+ std::string(RdKafka::err2str(resp)));
-				}
+			// send heartbeat to kafka
+			RdKafka::ErrorCode resp = m_pProducer->produce(topic,
+				RdKafka::Topic::PARTITION_UA, RdKafka::Producer::RK_MSG_COPY,
+				heartbeatData, heartbeatString.size(), NULL, NULL);
 
-				// let kafka do its internal stuff
-				poll(0);
+			// were there any errors
+			if (resp != RdKafka::ERR_NO_ERROR) {
+				log("Error producing heartbeat to topic: "
+					+ std::string(RdKafka::err2str(resp)));
 			}
 
-			// remember heartbeat time
-			m_lLastHeartbeatTime = timeNow;
+			// let kafka do its internal stuff
+			poll(0);
 		}
+
+		// remember heartbeat time
+		m_lLastHeartbeatTime = timeNow;
 	}
 }
 
@@ -249,11 +251,11 @@ void Producer::poll(int64_t timeout) {
 	m_pProducer->poll(timeout);
 }
 
-int64_t Producer::getHeartbeatInterval() {
-	return(m_lHeartbeatInterval);
+int Producer::getHeartbeatInterval() {
+	return(m_iHeartbeatInterval);
 }
 
-void Producer::setHeartbeatInterval(int64_t heartbeatInterval) {
-	m_lHeartbeatInterval = heartbeatInterval;
+void Producer::setHeartbeatInterval(int heartbeatInterval) {
+	m_iHeartbeatInterval = heartbeatInterval;
 }
 }  // namespace hazdevbroker

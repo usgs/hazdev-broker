@@ -71,12 +71,12 @@ class Producer: public ClientBase {
 	 * producer configuration.
 	 * \param topicConfigJSON - A reference to a rapidjson::Value containing the
 	 * topic configuration.
-	 * \param hbInterval - An int64_t containing the heartbeat interval, set to
-	 *  -1  to send heartbeats with every message, set to NAN to disable 
+	 * \param hbInterval - An int containing the heartbeat interval, set to
+	 * 0 to send heartbeats with every message, set to -1 to disable 
 	 * heartbeat messages
 	 */
 	Producer(rapidjson::Value &configJSON, rapidjson::Value &topicConfigJSON, // NOLINT
-			int64_t hbInterval);
+			int hbInterval);
 
 	/**
 	 * \brief Producer advanced constructor
@@ -90,12 +90,12 @@ class Producer: public ClientBase {
 	 * producer configuration.
 	 * \param topicConfigString - A json formatted std::string containing the
 	 * topic configuration.
-	 * \param hbInterval - An int64_t containing the heartbeat interval, set to
-	 *  -1  to send heartbeats with every message, set to NAN to disable 
+	 * \param hbInterval - An int containing the heartbeat interval, set to
+	 * 0 to send heartbeats with every message, set to -1 to disable 
 	 * heartbeat messages
 	 */
 	Producer(std::string configString, std::string topicConfigString, // NOLINT
-			int64_t hbInterval);
+			int hbInterval);
 
 	/**
 	 * \brief Producer destructor
@@ -193,16 +193,16 @@ class Producer: public ClientBase {
 	/**
 	 * \brief Get the heartbeat interval
 	 *
-	 * \return An int64_t containing the heartbeat interval
+	 * \return An int containing the heartbeat interval
 	 */
-	int64_t getHeartbeatInterval();
+	int getHeartbeatInterval();
 
 	/**
 	 * \brief Set the heartbeat interval
 	 *
-	 * \param heartbeatInterval - An int64_t containing the heartbeat interval
+	 * \param heartbeatInterval - An int containing the heartbeat interval
 	 */
-	void setHeartbeatInterval(int64_t heartbeatInterval);
+	void setHeartbeatInterval(int heartbeatInterval);
 
  private:
 	/**
@@ -213,12 +213,12 @@ class Producer: public ClientBase {
 	RdKafka::Producer * m_pProducer;
 
 	/**
-	 * Long defining the number seconds between sending heartbeat messages, 
-	 * default is 30 seconds, set to -1 to send a heartbeat message every time
+	 * Integer defining the number seconds between sending heartbeat messages, 
+	 * default is 30 seconds, set to 0 to send a heartbeat message every time
 	 * sendHeartbeat() is called (either directly or via send/sendString), set 
-	 * to NAN to disable heartbeat messages
+	 * to -1 to disable heartbeat messages
 	 */
-	int64_t m_lHeartbeatInterval;
+	int m_iHeartbeatInterval;
 
 	/**
 	 * Variable containing time the last heartbeat was sent.

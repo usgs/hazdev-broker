@@ -20,6 +20,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
  */
 public class Utility {
 
+	private static final String EMPTY_STRING = "";
+
 	/** Converts the provided string from a serialized JSON string, populating
 	 * members
 	 * @param jsonString - A string containing the serialized JSON
@@ -161,5 +163,53 @@ public class Utility {
 		}
 
 		return date;
+	}
+
+	/**
+	 * Convenience method to strip comments from a line from a configuration 
+	 * file
+	 *
+	 * @param line
+	 *            a String containing the configuration line to strip.
+	 * @param commentIdentifier
+	 *            a String containing the comment identifier character/string
+	 * @return a String containing the line without comments.
+	 */
+	public static String stripCommentsFromLine(String line, 
+		final String commentIdentifier ) {
+		
+		// nullcheck
+		if (line != null) {
+			// empty check
+			if (line.isEmpty()) {
+				return(line);
+			}
+
+			// look for the comment identifier
+			int position = line.indexOf(commentIdentifier);
+
+			// check position
+			if (position == 0) {
+				// identifier found in the first position
+				// the whole line is a comment
+				// return none of this line
+				return (EMPTY_STRING);
+			} else if (position == -1) {
+				// no identifier found
+				// no part of the line is a comment,
+				// return entire line
+				return (line);
+			} else {
+				// found identifier somewhere in the line
+				// everything after the identifier is a comment
+				// everything before is the line
+				// return the part of the line starting at 0
+				// and going to position of the identifier
+				return (line.substring(0, position));
+			}
+		}
+
+		// return empty line (if null)
+		return(EMPTY_STRING);
 	}
 }

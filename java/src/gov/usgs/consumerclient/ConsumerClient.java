@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
+import gov.usgs.hazdevbroker.Utility;
 import gov.usgs.hazdevbroker.Consumer;
 import gov.usgs.hazdevbroker.Heartbeat;
 
@@ -43,6 +44,8 @@ public class ConsumerClient {
 	public static final String OUTPUT_DIRECTORY = "OutputDirectory";
 	public static final String HEARTBEAT_INTERVAL = "HeartbeatInterval";
 	public static final String WRITE_HEARTBEAT_FILE = "WriteHeartbeatFile";
+
+	private static final String COMMENT_IDENTIFIER = "#";
 
 	/**
 	 * Required configuration string defining the output directory
@@ -135,10 +138,15 @@ public class ConsumerClient {
 		StringBuffer configBuffer = new StringBuffer();
 		try {
 			configReader = new BufferedReader(new FileReader(configFile));
-			String text = null;
+			String line = null;
 
-			while ((text = configReader.readLine()) != null) {
-				configBuffer.append(text).append("\n");
+			while ((line = configReader.readLine()) != null) {
+				// strip any comments
+				String strippedLine = Utility.stripCommentsFromLine(line, 
+					COMMENT_IDENTIFIER);
+				if ((strippedLine != null) && (!line.isEmpty())) {
+					configBuffer.append(strippedLine).append("\n");
+				}
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

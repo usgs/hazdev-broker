@@ -228,7 +228,9 @@ public class ProducerClient {
 		// create producer
 		Producer m_Producer = new Producer(brokerConfig, heartbeatInterval);
 
-		logger.info("Created Producer.");
+		logger.info("Created v" + m_Producer.VERSION_MAJOR + "." + 
+			m_Producer.VERSION_MINOR + "." + m_Producer.VERSION_PATCH + 
+			" Producer.");
 
 		// run until stopped
 		while (true) {

@@ -297,7 +297,9 @@ public class ConsumerClient {
 		// subscribe to topics
 		m_Consumer.subscribe(topicList);
 
-		logger.info("Created Consumer.");
+		logger.info("Created v" + m_Consumer.VERSION_MAJOR + "." + 
+			m_Consumer.VERSION_MINOR + "." + m_Consumer.VERSION_PATCH + 
+			" Consumer.");
 
 		// run until stopped
 		while (true) {

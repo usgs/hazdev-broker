@@ -207,7 +207,9 @@ public class ArchiveClient {
 		// subscribe to topics
 		m_Consumer.subscribe(topicList);
 
-		logger.info("Created Consumer.");
+		logger.info("Created v" + m_Consumer.VERSION_MAJOR + "." + 
+			m_Consumer.VERSION_MINOR + "." + m_Consumer.VERSION_PATCH + 
+			" Archiver.");
 
 		PrintWriter fileWriter = null;
 		Calendar fileCreationDate = null;

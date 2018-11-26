@@ -1,5 +1,6 @@
 package gov.usgs.launcher;
 
+import gov.usgs.hazdevbroker.ClientBase;
 import gov.usgs.consumerclient.ConsumerClient;
 import gov.usgs.producerclient.ProducerClient;
 import gov.usgs.archiveclient.ArchiveClient;
@@ -19,10 +20,17 @@ public class Launcher {
 	 */
 	public static void main(String[] args) {
 
+		// for version numbers
+		new ClientBase();
+
 		// check number of arguments
 		if (args == null || args.length == 0) {
 			System.out
-					.println("Usage: hazdev-broker <clientType> <configfile>");
+					.println("Usage: hazdev-broker v" + 
+						ClientBase.VERSION_MAJOR + "." + 
+						ClientBase.VERSION_MINOR + "." + 
+						ClientBase.VERSION_PATCH + 
+						" <clientType> <configfile>");
 			System.exit(1);
 		}
 
@@ -45,7 +53,7 @@ public class Launcher {
 			ArchiveClient.main(args2);
 		} else {
 			System.out.println(
-					"Invalid hazdev-broker <clientType> provided, only ConsumerClient, ProducerClient, or ArchiveClient supported.");
+					"Launcher: Invalid hazdev-broker <clientType> provided, only ConsumerClient, ProducerClient, or ArchiveClient supported.");
 		}
 
 	}

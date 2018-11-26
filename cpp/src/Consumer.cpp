@@ -98,7 +98,7 @@ void Consumer::setup(rapidjson::Value &configJSON,
 
 	// error check
 	if (!m_pConsumer) {
-		log("Error Creating consumer: " + errstr);
+		log("Consumer::setup: Error Creating consumer: " + errstr);
 		m_pConsumer = NULL;
 	}
 
@@ -124,7 +124,7 @@ void Consumer::setup(std::string configString, std::string topicConfigString) {
 
 	// error check
 	if (!m_pConsumer) {
-		log("Error Creating consumer: " + errstr);
+		log("Consumer::setup: Error Creating consumer: " + errstr);
 		m_pConsumer = NULL;
 	}
 
@@ -157,7 +157,8 @@ bool Consumer::subscribe(std::vector<std::string> topics) {
 
 	// error check
 	if (err) {
-		log("Error subscribing to topic(s): " + RdKafka::err2str(err));
+		log("Consumer::subscribe: Error subscribing to topic(s): " +
+			RdKafka::err2str(err));
 		return (false);
 	}
 
@@ -210,8 +211,8 @@ byte * Consumer::poll(int64_t timeout, size_t *datalength) {
 		return (NULL);
 	} else {
 		// error
-		log("Error polling broker cluster " + RdKafka::err2str(msg->err())
-			+ ": " + std::string(msg->errstr()));
+		log("Consumer::poll: Error polling broker cluster " +
+			RdKafka::err2str(msg->err()) + ": " + std::string(msg->errstr()));
 
 		// cleanup
 		delete (msg);
@@ -282,7 +283,8 @@ std::string Consumer::pollString(int64_t timeout) {
 		stringMessage = std::string(reinterpret_cast<const char *>(byteMessage),
 				length);
 	} catch (const std::exception &e) {
-		log("Exception converting bytes to string: " + std::string(e.what()));
+		log("Consumer::pollString: Exception converting bytes to string: " +
+			std::string(e.what()));
 		return ("");
 	}
 

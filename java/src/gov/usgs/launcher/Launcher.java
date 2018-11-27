@@ -20,9 +20,6 @@ public class Launcher {
 	 */
 	public static void main(String[] args) {
 
-		// for version numbers
-		new ClientBase();
-
 		// check number of arguments
 		if (args == null || args.length == 0) {
 			System.out

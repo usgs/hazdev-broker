@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
+import gov.usgs.hazdevbroker.Utility;
 import gov.usgs.hazdevbroker.Consumer;
 
 import java.util.*;
@@ -35,12 +36,14 @@ public class ArchiveClient {
 	/**
 	 * JSON Configuration Keys
 	 */
+	public static final String TYPE_KEY = "Type";
 	public static final String LOG4J_CONFIGFILE = "Log4JConfigFile";
 	public static final String BROKER_CONFIG = "HazdevBrokerConfig";
 	public static final String TOPIC_LIST = "TopicList";
 	public static final String FILE_EXTENSION = "FileExtension";
 	public static final String FILE_NAME = "FileName";
 	public static final String OUTPUT_DIRECTORY = "OutputDirectory";
+	private static final String COMMENT_IDENTIFIER = "#";
 
 	/**
 	 * Required configuration string defining the output directory
@@ -91,10 +94,15 @@ public class ArchiveClient {
 		StringBuffer configBuffer = new StringBuffer();
 		try {
 			configReader = new BufferedReader(new FileReader(configFile));
-			String text = null;
+			String line = null;
 
-			while ((text = configReader.readLine()) != null) {
-				configBuffer.append(text).append("\n");
+			while ((line = configReader.readLine()) != null) {
+				// strip any comments
+				String strippedLine = Utility.stripCommentsFromLine(line, 
+					COMMENT_IDENTIFIER);
+				if ((strippedLine != null) && (!line.isEmpty())) {
+					configBuffer.append(strippedLine).append("\n");
+				}
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -123,6 +131,18 @@ public class ArchiveClient {
 		// nullcheck
 		if (configJSON == null) {
 			System.out.println("Error, invalid json from configuration.");
+			System.exit(1);
+		}
+
+		// type check
+		if (configJSON.containsKey(TYPE_KEY)) {
+			String type = configJSON.get(TYPE_KEY).toString();
+			if (!type.equals("ArchiveClient")) {
+				System.out.println("Error, wrong configuration.");
+				System.exit(1);
+			}
+		} else {
+			System.out.println("Error, missing type in configuration.");
 			System.exit(1);
 		}
 
@@ -160,6 +180,12 @@ public class ArchiveClient {
 			outputDirectory = (String) configJSON.get(OUTPUT_DIRECTORY);
 			logger.info(
 					"Using configured outputDirectory of: " + outputDirectory);
+
+			// create output directory if it doesn't exist
+			File outDir = new File(outputDirectory);
+			if (!outDir.exists()) {
+				outDir.mkdirs();
+			}
 		} else {
 			logger.error(
 					"Error, did not find OutputDirectory in configuration.");
@@ -207,9 +233,9 @@ public class ArchiveClient {
 		// subscribe to topics
 		m_Consumer.subscribe(topicList);
 
-		logger.info("Created v" + m_Consumer.VERSION_MAJOR + "." + 
-			m_Consumer.VERSION_MINOR + "." + m_Consumer.VERSION_PATCH + 
-			" Archiver.");
+		logger.info("Startup, version : " + 
+			m_Consumer.VERSION_MAJOR + "." + m_Consumer.VERSION_MINOR + "." + 
+			m_Consumer.VERSION_PATCH);
 
 		PrintWriter fileWriter = null;
 		Calendar fileCreationDate = null;

@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
+import gov.usgs.hazdevbroker.Utility;
 import gov.usgs.hazdevbroker.Producer;
 
 import java.util.*;
@@ -27,6 +28,7 @@ public class ProducerClient {
 	/**
 	 * JSON Configuration Keys
 	 */
+	public static final String TYPE_KEY = "Type";
 	public static final String LOG4J_CONFIGFILE = "Log4JConfigFile";
 	public static final String BROKER_CONFIG = "HazdevBrokerConfig";
 	public static final String TOPIC = "Topic";
@@ -35,7 +37,7 @@ public class ProducerClient {
 	public static final String INPUT_DIRECTORY = "InputDirectory";
 	public static final String ARCHIVE_DIRECTORY = "ArchiveDirectory";
 	public static final String HEARTBEAT_INTERVAL = "HeartbeatInterval";
-
+	private static final String COMMENT_IDENTIFIER = "#";
 
 	/**
 	 * Required configuration string defining the input directory
@@ -108,10 +110,15 @@ public class ProducerClient {
 		StringBuffer configBuffer = new StringBuffer();
 		try {
 			configReader = new BufferedReader(new FileReader(configFile));
-			String text = null;
+			String line = null;
 
-			while ((text = configReader.readLine()) != null) {
-				configBuffer.append(text).append("\n");
+			while ((line = configReader.readLine()) != null) {
+				// strip any comments
+				String strippedLine = Utility.stripCommentsFromLine(line, 
+					COMMENT_IDENTIFIER);
+				if ((strippedLine != null) && (!line.isEmpty())) {
+					configBuffer.append(strippedLine).append("\n");
+				}
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -143,6 +150,18 @@ public class ProducerClient {
 			System.exit(1);
 		}
 
+		// type check
+		if (configJSON.containsKey(TYPE_KEY)) {
+			String type = configJSON.get(TYPE_KEY).toString();
+			if (!type.equals("ProducerClient")) {
+				System.out.println("Error, wrong configuration.");
+				System.exit(1);
+			}
+		} else {
+			System.out.println("Error, missing type in configuration.");
+			System.exit(1);
+		}
+
 		// get log4j config
 		String logConfigString = null;
 		if (configJSON.containsKey(LOG4J_CONFIGFILE)) {
@@ -168,6 +187,12 @@ public class ProducerClient {
 			inputDirectory = (String) configJSON.get(INPUT_DIRECTORY);
 			logger.info(
 					"Using configured inputDirectory of: " + inputDirectory);
+
+			// create input directory if it doesn't exist
+			File inputDir = new File(inputDirectory);
+			if (!inputDir.exists()) {
+				inputDir.mkdirs();
+			}
 		} else {
 			logger.error(
 					"Error, did not find InputDirectory in configuration.");
@@ -179,6 +204,12 @@ public class ProducerClient {
 			archiveDirectory = (String) configJSON.get(ARCHIVE_DIRECTORY);
 			logger.info("Using configured archiveDirectory of: "
 					+ archiveDirectory);
+
+			// create archive directory if it doesn't exist
+			File archDir = new File(archiveDirectory);
+			if (!archDir.exists()) {
+				archDir.mkdirs();
+			}
 		} else {
 			logger.info("Not using archiveDirectory.");
 		}
@@ -228,9 +259,9 @@ public class ProducerClient {
 		// create producer
 		Producer m_Producer = new Producer(brokerConfig, heartbeatInterval);
 
-		logger.info("Created v" + m_Producer.VERSION_MAJOR + "." + 
-			m_Producer.VERSION_MINOR + "." + m_Producer.VERSION_PATCH + 
-			" Producer.");
+		logger.info("Startup, version : " + 
+			m_Producer.VERSION_MAJOR + "." + m_Producer.VERSION_MINOR + "." + 
+			m_Producer.VERSION_PATCH);
 
 		// run until stopped
 		while (true) {
@@ -328,10 +359,10 @@ public class ProducerClient {
 						// not archiving, just delete it
 						inputFile.delete();
 					} else {
-
 						// Move file to archive directory
 						inputFile.renameTo(new File(
-								archiveDirectory + "/" + inputFile.getName()));
+								archiveDirectory + File.separatorChar + 
+								inputFile.getName()));
 					}
 
 					// only handle one file at a time

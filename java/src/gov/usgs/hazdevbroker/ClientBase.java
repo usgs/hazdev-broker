@@ -38,6 +38,8 @@ public class ClientBase {
 	 * The constructor for the ClientBase class.
 	 */
 	public ClientBase() {
+		System.out.println("Hazdev-Broker version : " + VERSION_MAJOR + "." + 
+			VERSION_MINOR + "." + VERSION_PATCH);
 	}
 
 	/**

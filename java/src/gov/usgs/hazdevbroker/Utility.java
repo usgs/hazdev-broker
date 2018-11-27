@@ -180,8 +180,11 @@ public class Utility {
 		
 		// nullcheck
 		if (line != null) {
-			// empty check
+			// empty checks
 			if (line.isEmpty()) {
+				return(line);
+			}
+			if (commentIdentifier.isEmpty()) {
 				return(line);
 			}
 

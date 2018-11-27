@@ -186,4 +186,40 @@ rapidjson::Document & fromJSONString(std::string jsonstring,
 		return (jsondocument);
 	}
 }
+
+std::string stripCommentsFromLine(std::string line,
+								  std::string commentIdentifier) {
+	// empty checks
+	if (line.length() == 0) {
+		return (line);
+	}
+	if (commentIdentifier.length() == 0) {
+		return (line);
+	}
+
+	// now look for commentIdentifier in the line, and skip to the the next line
+	size_t position = line.find(commentIdentifier);
+
+	if (position == 0) {
+		// commentIdentifier found in the first position
+		// the whole line is a comment
+		// return none of the line
+		return ("");
+	} else if (position == std::string::npos) {
+		// no commentIdentifier found
+		// no part of the line is a comment,
+		// return entire line
+		return (line);
+	} else {
+		// found commentIdentifier somewhere in the line
+		// everything after the # is a comment
+		// everything before is the line
+		// return the part of the line starting at 0
+		// and going to position
+		return (line.substr(0, position));
+	}
+
+	// should never get here
+	return (line);
+}
 }  // namespace hazdevbroker

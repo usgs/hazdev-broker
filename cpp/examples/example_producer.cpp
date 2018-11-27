@@ -33,9 +33,15 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	std::stringstream configBuffer;
-	configBuffer << configFile.rdbuf();
-	std::string configString = configBuffer.str();
+	std::string line;
+	std::string configString = "";
+	while (std::getline(configFile, line)) {
+		if (line.empty()) {
+        	continue;
+		}
+
+		configString += hazdevbroker::stripCommentsFromLine(line, "#");
+	}
 	configFile.close();
 
 	// parse config file into json

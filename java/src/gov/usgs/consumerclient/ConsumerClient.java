@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
+import gov.usgs.hazdevbroker.Utility;
 import gov.usgs.hazdevbroker.Consumer;
 import gov.usgs.hazdevbroker.Heartbeat;
 
@@ -33,6 +34,7 @@ public class ConsumerClient {
 	/**
 	 * JSON Configuration Keys
 	 */
+	public static final String TYPE_KEY = "Type";
 	public static final String LOG4J_CONFIGFILE = "Log4JConfigFile";
 	public static final String BROKER_CONFIG = "HazdevBrokerConfig";
 	public static final String TOPIC_LIST = "TopicList";
@@ -126,47 +128,24 @@ public class ConsumerClient {
 		// init last write time to now
 		lastFileWriteTime = (Long) (System.currentTimeMillis() / 1000);
 
-		// get config file name
-		String configFileName = args[0];
-
-		// read the config file
-		File configFile = new File(configFileName);
-		BufferedReader configReader = null;
-		StringBuffer configBuffer = new StringBuffer();
-		try {
-			configReader = new BufferedReader(new FileReader(configFile));
-			String text = null;
-
-			while ((text = configReader.readLine()) != null) {
-				configBuffer.append(text).append("\n");
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (configReader != null) {
-					configReader.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
 		// parse config file into json
-		JSONObject configJSON = null;
-		try {
-			JSONParser configParser = new JSONParser();
-			configJSON = (JSONObject) configParser
-					.parse(configBuffer.toString());
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+		JSONObject configJSON = Utility.readConfigurationFromFile(args[0]);
 
 		// nullcheck
 		if (configJSON == null) {
 			System.out.println("Error, invalid json from configuration.");
+			System.exit(1);
+		}
+
+		// type check
+		if (configJSON.containsKey(TYPE_KEY)) {
+			String type = configJSON.get(TYPE_KEY).toString();
+			if (!type.equals("ConsumerClient")) {
+				System.out.println("Error, wrong configuration.");
+				System.exit(1);
+			}
+		} else {
+			System.out.println("Error, missing type in configuration.");
 			System.exit(1);
 		}
 
@@ -204,6 +183,12 @@ public class ConsumerClient {
 			outputDirectory = (String) configJSON.get(OUTPUT_DIRECTORY);
 			logger.info(
 					"Using configured outputDirectory of: " + outputDirectory);
+
+			// create output directory if it doesn't exist
+			File outDir = new File(outputDirectory);
+			if (!outDir.exists()) {
+				outDir.mkdirs();
+			}
 		} else {
 			logger.error(
 					"Error, did not find OutputDirectory in configuration.");
@@ -297,7 +282,9 @@ public class ConsumerClient {
 		// subscribe to topics
 		m_Consumer.subscribe(topicList);
 
-		logger.info("Created Consumer.");
+		logger.info("Startup, version : " + 
+			m_Consumer.VERSION_MAJOR + "." + m_Consumer.VERSION_MINOR + "." + 
+			m_Consumer.VERSION_PATCH);
 
 		// run until stopped
 		while (true) {

@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
+import gov.usgs.hazdevbroker.Utility;
 import gov.usgs.hazdevbroker.Producer;
 
 import java.util.*;
@@ -27,6 +28,7 @@ public class ProducerClient {
 	/**
 	 * JSON Configuration Keys
 	 */
+	public static final String TYPE_KEY = "Type";
 	public static final String LOG4J_CONFIGFILE = "Log4JConfigFile";
 	public static final String BROKER_CONFIG = "HazdevBrokerConfig";
 	public static final String TOPIC = "Topic";
@@ -35,7 +37,6 @@ public class ProducerClient {
 	public static final String INPUT_DIRECTORY = "InputDirectory";
 	public static final String ARCHIVE_DIRECTORY = "ArchiveDirectory";
 	public static final String HEARTBEAT_INTERVAL = "HeartbeatInterval";
-
 
 	/**
 	 * Required configuration string defining the input directory
@@ -99,47 +100,24 @@ public class ProducerClient {
 		// init last heartbeat time to now
 		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
 
-		// get config file name
-		String configFileName = args[0];
-
-		// read the config file
-		File configFile = new File(configFileName);
-		BufferedReader configReader = null;
-		StringBuffer configBuffer = new StringBuffer();
-		try {
-			configReader = new BufferedReader(new FileReader(configFile));
-			String text = null;
-
-			while ((text = configReader.readLine()) != null) {
-				configBuffer.append(text).append("\n");
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (configReader != null) {
-					configReader.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
 		// parse config file into json
-		JSONObject configJSON = null;
-		try {
-			JSONParser configParser = new JSONParser();
-			configJSON = (JSONObject) configParser
-					.parse(configBuffer.toString());
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+		JSONObject configJSON = Utility.readConfigurationFromFile(args[0]);
 
 		// nullcheck
 		if (configJSON == null) {
 			System.out.println("Error, invalid json from configuration.");
+			System.exit(1);
+		}
+
+		// type check
+		if (configJSON.containsKey(TYPE_KEY)) {
+			String type = configJSON.get(TYPE_KEY).toString();
+			if (!type.equals("ProducerClient")) {
+				System.out.println("Error, wrong configuration.");
+				System.exit(1);
+			}
+		} else {
+			System.out.println("Error, missing type in configuration.");
 			System.exit(1);
 		}
 
@@ -179,6 +157,12 @@ public class ProducerClient {
 			archiveDirectory = (String) configJSON.get(ARCHIVE_DIRECTORY);
 			logger.info("Using configured archiveDirectory of: "
 					+ archiveDirectory);
+
+			// create archive directory if it doesn't exist
+			File archDir = new File(archiveDirectory);
+			if (!archDir.exists()) {
+				archDir.mkdirs();
+			}
 		} else {
 			logger.info("Not using archiveDirectory.");
 		}
@@ -228,7 +212,9 @@ public class ProducerClient {
 		// create producer
 		Producer m_Producer = new Producer(brokerConfig, heartbeatInterval);
 
-		logger.info("Created Producer.");
+		logger.info("Startup, version : " + 
+			m_Producer.VERSION_MAJOR + "." + m_Producer.VERSION_MINOR + "." + 
+			m_Producer.VERSION_PATCH);
 
 		// run until stopped
 		while (true) {
@@ -326,10 +312,10 @@ public class ProducerClient {
 						// not archiving, just delete it
 						inputFile.delete();
 					} else {
-
 						// Move file to archive directory
 						inputFile.renameTo(new File(
-								archiveDirectory + "/" + inputFile.getName()));
+								archiveDirectory + File.separatorChar + 
+								inputFile.getName()));
 					}
 
 					// only handle one file at a time

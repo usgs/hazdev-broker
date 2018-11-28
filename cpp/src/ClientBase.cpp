@@ -1,3 +1,4 @@
+#include <project_version.h>
 #include <ClientBase.h>
 #include <rdkafkacpp.h>
 #include <limits>
@@ -13,6 +14,10 @@ namespace hazdevbroker {
 
 ClientBase::ClientBase() {
 	m_sConfigType = "";
+	log("hazdev-broker: v" +
+		std::to_string(PROJECT_VERSION_MAJOR) + "." +
+		std::to_string(PROJECT_VERSION_MINOR) + "." +
+		std::to_string(PROJECT_VERSION_PATCH));
 }
 
 ClientBase::~ClientBase() {
@@ -31,14 +36,16 @@ RdKafka::Conf * ClientBase::convertJSONStringToProp(std::string configString,
 	// use a document parse to convert from a string
 	rapidjson::Document configJSON;
 	if (configJSON.Parse(configString.c_str()).HasParseError()) {
-		log("Error Parsing config string to JSON.");
+		log("ClientBase::convertJSONStringToProp(): Error Parsing config string to"
+		" JSON.");
 		return (NULL);
 	}
 
 	rapidjson::Document topicConfigJSON;
 	if (topicConfigString != "") {
 		if (topicConfigJSON.Parse(topicConfigString.c_str()).HasParseError()) {
-			log("Error Parsing topic config string to JSON.");
+			log("ClientBase::convertJSONStringToProp(): Error Parsing topic config"
+			" string to JSON.");
 			return (NULL);
 		}
 	}
@@ -56,8 +63,8 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 			&& (configJSON[TYPE_KEY].IsString() == true)) {
 		std::string configType = configJSON[TYPE_KEY].GetString();
 		if (configType != m_sConfigType) {
-			log("Error, Configuration is not for: " + m_sConfigType
-							+ ", it is for: " + configType);
+			log("ClientBase::convertJSONConfigToProp(): Error, Configuration is "
+			"not for: " + m_sConfigType + ", it is for: " + configType);
 			return (NULL);
 		}
 	} else {
@@ -67,11 +74,12 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 
 	// check for properties object
 	if (configJSON.HasMember(PROPERTIES_KEY) == false) {
-		log("Error, " + std::string(PROPERTIES_KEY)
-						+ " missing from configuration.");
+		log("ClientBase::convertJSONConfigToProp(): Error, " +
+			std::string(PROPERTIES_KEY) + " missing from configuration.");
 		return (NULL);
 	} else if (configJSON[PROPERTIES_KEY].IsObject() == false) {
-		log("Error, " + std::string(PROPERTIES_KEY) + " is not an object.");
+		log("ClientBase::convertJSONConfigToProp(): Error, " +
+			std::string(PROPERTIES_KEY) + " is not an object.");
 		return (NULL);
 	}
 
@@ -92,7 +100,8 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 
 		if (conf->set(itr->name.GetString(), itr->value.GetString(), errstr)
 				!= RdKafka::Conf::CONF_OK) {
-			log("Error setting configuration entry: " +
+			log("ClientBase::convertJSONConfigToProp:(): Error setting "
+				"configuration entry: " +
 				std::string(itr->name.GetString()) + " value: " +
 				std::string(itr->value.GetString()) + " error: " +
 				errstr);
@@ -111,24 +120,22 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 				&& (topicConfigJSON[TYPE_KEY].IsString() == true)) {
 			std::string topicConfigType = topicConfigJSON[TYPE_KEY].GetString();
 			if (topicConfigType != std::string(TOPICTYPE_STRING)) {
-				log(
-						"Error, Configuration is not for: "
-								+ std::string(TOPICTYPE_STRING)
-								+ ", it is for: " + topicConfigType);
+				log("ClientBase::convertJSONConfigToProp:(): Error, Configuration "
+					"is not for: " + std::string(TOPICTYPE_STRING)
+					+ ", it is for: " + topicConfigType);
 				return (NULL);
 			}
 		} else {
-			log(
-					"Error, " + std::string(TYPE_KEY)
-							+ " missing from topic configuration.");
+			log("ClientBase::convertJSONConfigToProp(): Error, " +
+				std::string(TYPE_KEY) + " missing from topic configuration.");
 			return (NULL);
 		}
 
 		// check for properties object
 		if (topicConfigJSON.HasMember(PROPERTIES_KEY) == false) {
-			log(
-					"Error, " + std::string(PROPERTIES_KEY)
-							+ " missing from topic configuration.");
+			log("ClientBase::convertJSONConfigToProp(): Error, " +
+				std::string(PROPERTIES_KEY) + " missing from topic "
+				"configuration.");
 			return (NULL);
 		} else if (topicConfigJSON[PROPERTIES_KEY].IsObject() == false) {
 			log("Error, " + std::string(PROPERTIES_KEY) + " is not an object.");
@@ -145,7 +152,8 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 				itr != topicPropertiesObject.MemberEnd(); ++itr) {
 			if (topicConfig->set(itr->name.GetString(), itr->value.GetString(),
 					errstr) != RdKafka::Conf::CONF_OK) {
-				log("Error setting topic configuration entry: " +
+				log("ClientBase::convertJSONConfigToProp(): Error setting topic "
+					"configuration entry: " +
 					std::string(itr->name.GetString()) + " value: " +
 					std::string(itr->value.GetString()) + " error: " +
 					errstr);
@@ -153,13 +161,15 @@ RdKafka::Conf * ClientBase::convertJSONConfigToProp(
 			}
 		}
 	} else {
-		log("Using default topic configuration");
+		log("ClientBase::convertJSONConfigToProp(): Using default topic "
+			"configuration");
 	}
 
 	// set the topic config into the overall config
 	if (conf->set("default_topic_conf", topicConfig, errstr)
 			!= RdKafka::Conf::CONF_OK) {
-		log("Error setting default topic configuration entry: " + errstr);
+		log("ClientBase::convertJSONConfigToProp(): Error setting default topic "
+			"configuration entry: " + errstr);
 		return (NULL);
 	}
 	delete (topicConfig);

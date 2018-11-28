@@ -68,10 +68,28 @@ namespace hazdevbroker {
 	 * members
 	 * \param jsonstring - A std::string containing the serialized json
      * \param jsondocument - A reference to the rapidjson::Document to populate
-	 * \return Returns A reference to the populated rapidjson::Document
+	 * \return Returns a reference to the populated rapidjson::Document
 	 */
 	rapidjson::Document & fromJSONString(std::string jsonstring,
 										 rapidjson::Document & jsondocument); // NOLINT
+
+	/**
+	 * \brief Strip comments from a line
+	 *
+	 * Strips the provided string of comment blocks identified by the given 
+	 * comment identifier. This function will return any characters up to the
+	 * comment identifier and not return any characters after (and including) the
+	 * comment identifier up to the end of provided line string. This function 
+	 * will return  an empty string if the line string starts with a comment 
+	 * identifier.
+	 * 
+	 * \param line - A std::string containing the line to strip
+     * \param commentIdentifier - A std::string containing the comment 
+	 * identifier character/string
+	 * \return Returns a std::string containing the stripped string
+	 */
+	std::string stripCommentsFromLine(std::string line,
+									  std::string commentIdentifier);
 
 }  // namespace hazdevbroker
 #endif  // HAZDEVBROKER_UTILITY_H

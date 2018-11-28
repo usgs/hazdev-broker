@@ -20,6 +20,15 @@ public class ClientBase {
 	public static final String TYPE_KEY = "Type";
 	public static final String PROPERTIES_KEY = "Properties";
 
+	/** 
+	 * Version
+	 * NOTE: Make sure to also update the c++ version in version.cmake when 
+	 * updating this file
+	 */
+	public static final Integer VERSION_MAJOR = 0;
+	public static final Integer VERSION_MINOR = 2;
+	public static final Integer VERSION_PATCH = 1; 
+
 	/**
 	 * Client Configuration ID
 	 */
@@ -29,6 +38,8 @@ public class ClientBase {
 	 * The constructor for the ClientBase class.
 	 */
 	public ClientBase() {
+		System.out.println("Hazdev-Broker version : " + VERSION_MAJOR + "." + 
+			VERSION_MINOR + "." + VERSION_PATCH);
 	}
 
 	/**

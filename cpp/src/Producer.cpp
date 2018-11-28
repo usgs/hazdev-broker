@@ -93,7 +93,7 @@ void Producer::setup(rapidjson::Value &configJSON,
 
 	// error check
 	if (!m_pProducer) {
-		log("Producer::setup: Error Creating m_pProducer: " + errstr);
+		log("Producer::setup(): Error Creating m_pProducer: " + errstr);
 		m_pProducer = NULL;
 	}
 
@@ -119,7 +119,7 @@ void Producer::setup(std::string configString, std::string topicConfigString) {
 
 	// error check
 	if (!m_pProducer) {
-		log("Producer::setup: Error Creating m_pProducer: " + errstr);
+		log("Producer::setup(): Error Creating m_pProducer: " + errstr);
 		m_pProducer = NULL;
 	}
 
@@ -142,7 +142,7 @@ RdKafka::Topic * Producer::createTopic(std::string topic,
 
 	// error check
 	if (!newtopic) {
-		log("Producer::createTopic: Error creating topic: " + errstr);
+		log("Producer::createTopic(): Error creating topic: " + errstr);
 		return (NULL);
 	}
 
@@ -162,7 +162,7 @@ void Producer::send(RdKafka::Topic *topic, byte* data, size_t dataLength) {
 
 	// were there any errors
 	if (resp != RdKafka::ERR_NO_ERROR) {
-		log("Producer::createTopic: Error producing data to topic: "
+		log("Producer::createTopic(): Error producing data to topic: "
 			+ std::string(RdKafka::err2str(resp)));
 	}
 
@@ -209,7 +209,7 @@ void Producer::sendHeartbeat(RdKafka::Topic *topic) {
 
 			// were there any errors
 			if (resp != RdKafka::ERR_NO_ERROR) {
-				log("Producer::sendHeartbeat: Error producing heartbeat to "
+				log("Producer::sendHeartbeat(): Error producing heartbeat to "
 					"topic: " + std::string(RdKafka::err2str(resp)));
 			}
 

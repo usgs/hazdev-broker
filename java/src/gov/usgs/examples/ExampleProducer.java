@@ -4,20 +4,13 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
+import gov.usgs.hazdevbroker.Utility;
 import gov.usgs.hazdevbroker.Producer;
 
 import java.util.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 public class ExampleProducer {
 
@@ -31,8 +24,6 @@ public class ExampleProducer {
 			System.exit(1);
 		}
 
-		String configFileName = args[0];
-
 		// init log4j
 		if (args.length == 1) {
 			System.out.println("Using default logging configuration");
@@ -42,40 +33,8 @@ public class ExampleProducer {
 			PropertyConfigurator.configure(args[1]);
 		}
 
-		// read the config file
-		File configFile = new File(configFileName);
-		BufferedReader configReader = null;
-		StringBuffer configBuffer = new StringBuffer();
-
-		try {
-			configReader = new BufferedReader(new FileReader(configFile));
-			String text = null;
-
-			while ((text = configReader.readLine()) != null) {
-				configBuffer.append(text).append("\n");
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (configReader != null) {
-					configReader.close();
-				}
-			} catch (IOException e) {
-			}
-		}
-
 		// parse config file into json
-		JSONObject configJSON = null;
-		try {
-			JSONParser configParser = new JSONParser();
-			configJSON = (JSONObject) configParser
-					.parse(configBuffer.toString());
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+		JSONObject configJSON = Utility.readConfigurationFromFile(args[0]);
 
 		// nullcheck
 		if (configJSON == null) {

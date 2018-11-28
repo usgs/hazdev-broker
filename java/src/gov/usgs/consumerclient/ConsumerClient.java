@@ -45,7 +45,6 @@ public class ConsumerClient {
 	public static final String OUTPUT_DIRECTORY = "OutputDirectory";
 	public static final String HEARTBEAT_INTERVAL = "HeartbeatInterval";
 	public static final String WRITE_HEARTBEAT_FILE = "WriteHeartbeatFile";
-	private static final String COMMENT_IDENTIFIER = "#";
 
 	/**
 	 * Required configuration string defining the output directory
@@ -129,48 +128,8 @@ public class ConsumerClient {
 		// init last write time to now
 		lastFileWriteTime = (Long) (System.currentTimeMillis() / 1000);
 
-		// get config file name
-		String configFileName = args[0];
-
-		// read the config file
-		File configFile = new File(configFileName);
-		BufferedReader configReader = null;
-		StringBuffer configBuffer = new StringBuffer();
-		try {
-			configReader = new BufferedReader(new FileReader(configFile));
-			String line = null;
-
-			while ((line = configReader.readLine()) != null) {
-				// strip any comments
-				String strippedLine = Utility.stripCommentsFromLine(line, 
-					COMMENT_IDENTIFIER);
-				if ((strippedLine != null) && (!line.isEmpty())) {
-					configBuffer.append(strippedLine).append("\n");
-				}
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (configReader != null) {
-					configReader.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
 		// parse config file into json
-		JSONObject configJSON = null;
-		try {
-			JSONParser configParser = new JSONParser();
-			configJSON = (JSONObject) configParser
-					.parse(configBuffer.toString());
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+		JSONObject configJSON = Utility.readConfigurationFromFile(args[0]);
 
 		// nullcheck
 		if (configJSON == null) {

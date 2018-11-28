@@ -34,6 +34,9 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
+	// this section is responsible for pre-parsing the config file and removing
+	// any comment lines uses hazdevbroker::stripCommentsFromLine() to do the
+	// actual stripping.
 	std::string line;
 	std::string configString = "";
 	while (std::getline(configFile, line)) {

@@ -8,12 +8,10 @@ import gov.usgs.hazdevbroker.Utility;
 import gov.usgs.hazdevbroker.Consumer;
 
 import java.util.*;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -21,8 +19,6 @@ import java.text.SimpleDateFormat;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 /**
  * a client class used to archive messages out of one or more hazdev-broker
@@ -43,7 +39,6 @@ public class ArchiveClient {
 	public static final String FILE_EXTENSION = "FileExtension";
 	public static final String FILE_NAME = "FileName";
 	public static final String OUTPUT_DIRECTORY = "OutputDirectory";
-	private static final String COMMENT_IDENTIFIER = "#";
 
 	/**
 	 * Required configuration string defining the output directory
@@ -85,48 +80,8 @@ public class ArchiveClient {
 		fileExtension = null;
 		fileName = new String();
 
-		// get config file name
-		String configFileName = args[0];
-
-		// read the config file
-		File configFile = new File(configFileName);
-		BufferedReader configReader = null;
-		StringBuffer configBuffer = new StringBuffer();
-		try {
-			configReader = new BufferedReader(new FileReader(configFile));
-			String line = null;
-
-			while ((line = configReader.readLine()) != null) {
-				// strip any comments
-				String strippedLine = Utility.stripCommentsFromLine(line, 
-					COMMENT_IDENTIFIER);
-				if ((strippedLine != null) && (!line.isEmpty())) {
-					configBuffer.append(strippedLine).append("\n");
-				}
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (configReader != null) {
-					configReader.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
 		// parse config file into json
-		JSONObject configJSON = null;
-		try {
-			JSONParser configParser = new JSONParser();
-			configJSON = (JSONObject) configParser
-					.parse(configBuffer.toString());
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+		JSONObject configJSON = Utility.readConfigurationFromFile(args[0]);
 
 		// nullcheck
 		if (configJSON == null) {

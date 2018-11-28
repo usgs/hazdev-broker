@@ -77,7 +77,12 @@ namespace hazdevbroker {
 	 * \brief Strip comments from a line
 	 *
 	 * Strips the provided string of comment blocks identified by the given 
-	 * comment identifier 
+	 * comment identifier. This function will return any characters up to the
+	 * comment identifier and not return any characters after (and including) the
+	 * comment identifier up to the end of provided line string. This function 
+	 * will return  an empty string if the line string starts with a comment 
+	 * identifier.
+	 * 
 	 * \param line - A std::string containing the line to strip
      * \param commentIdentifier - A std::string containing the comment 
 	 * identifier character/string

@@ -37,7 +37,6 @@ public class ProducerClient {
 	public static final String INPUT_DIRECTORY = "InputDirectory";
 	public static final String ARCHIVE_DIRECTORY = "ArchiveDirectory";
 	public static final String HEARTBEAT_INTERVAL = "HeartbeatInterval";
-	private static final String COMMENT_IDENTIFIER = "#";
 
 	/**
 	 * Required configuration string defining the input directory
@@ -101,48 +100,8 @@ public class ProducerClient {
 		// init last heartbeat time to now
 		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
 
-		// get config file name
-		String configFileName = args[0];
-
-		// read the config file
-		File configFile = new File(configFileName);
-		BufferedReader configReader = null;
-		StringBuffer configBuffer = new StringBuffer();
-		try {
-			configReader = new BufferedReader(new FileReader(configFile));
-			String line = null;
-
-			while ((line = configReader.readLine()) != null) {
-				// strip any comments
-				String strippedLine = Utility.stripCommentsFromLine(line, 
-					COMMENT_IDENTIFIER);
-				if ((strippedLine != null) && (!line.isEmpty())) {
-					configBuffer.append(strippedLine).append("\n");
-				}
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (configReader != null) {
-					configReader.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
 		// parse config file into json
-		JSONObject configJSON = null;
-		try {
-			JSONParser configParser = new JSONParser();
-			configJSON = (JSONObject) configParser
-					.parse(configBuffer.toString());
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+		JSONObject configJSON = Utility.readConfigurationFromFile(args[0]);
 
 		// nullcheck
 		if (configJSON == null) {
@@ -187,12 +146,6 @@ public class ProducerClient {
 			inputDirectory = (String) configJSON.get(INPUT_DIRECTORY);
 			logger.info(
 					"Using configured inputDirectory of: " + inputDirectory);
-
-			// create input directory if it doesn't exist
-			File inputDir = new File(inputDirectory);
-			if (!inputDir.exists()) {
-				inputDir.mkdirs();
-			}
 		} else {
 			logger.error(
 					"Error, did not find InputDirectory in configuration.");

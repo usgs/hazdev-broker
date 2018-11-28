@@ -27,7 +27,7 @@ public class ClientBase {
 	 */
 	public static final Integer VERSION_MAJOR = 0;
 	public static final Integer VERSION_MINOR = 2;
-	public static final Integer VERSION_PATCH = 1; 
+	public static final Integer VERSION_PATCH = 2; 
 
 	/**
 	 * Client Configuration ID

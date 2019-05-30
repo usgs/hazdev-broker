@@ -52,8 +52,7 @@ public class Launcher {
 			System.out.println("v" + ClientBase.VERSION_MAJOR + "." + 
 				ClientBase.VERSION_MINOR + "." + 
 				ClientBase.VERSION_PATCH);
-	System.exit(1);
-		} 
+			System.exit(1);
 		} else {
 			System.out.println(
 					"Launcher: Invalid hazdev-broker <clientType> provided, only ConsumerClient, ProducerClient, or ArchiveClient supported.");

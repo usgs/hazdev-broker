@@ -424,8 +424,9 @@ public class ConsumerClient {
 				fileString += messageString;
 			}
 
-			// make sure we have something in the filestring to write.
-			if (!fileString.isEmpty()) {
+			// make sure we have something in the filestring to write (besides 
+			// whitespace).
+			if (!fileString.trim().isEmpty()) {
 				// create an UTF-8 formatted printwriter to write to disk
 				PrintWriter fileWriter = new PrintWriter(outFileName, "UTF-8");
 

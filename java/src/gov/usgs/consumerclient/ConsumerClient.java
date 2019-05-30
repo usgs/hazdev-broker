@@ -402,11 +402,10 @@ public class ConsumerClient {
 			String outFileName = outputDirectory + "/" + timeNow.toString()
 					+ fileName + "." + fileExtension;
 
-			// create an UTF-8 formatted printwriter to write to disk
-			PrintWriter fileWriter = new PrintWriter(outFileName, "UTF-8");
+			// Create string to write to file
+			String fileString = "";
 
 			for (int i = 0; i < numToWrite; i++) {
-
 				// don't try to write if we're out of messages
 				if (fileQueue.isEmpty()) {
 					continue;
@@ -415,18 +414,28 @@ public class ConsumerClient {
 				// get the next message to write
 				String messageString = fileQueue.remove();
 
-				// check to see if we were newline terminated, add a newline
-				// if we were not
+				// check to see if the message was newline terminated, add a newline
+				// if it isn't
 				if (messageString.charAt(messageString.length() - 1) != '\n') {
 					messageString = messageString.concat("\n");
 				}
 
-				// just call print
-				fileWriter.print(messageString);
+				// add the message to the file string
+				fileString += messageString;
 			}
 
-			// done with file
-			fileWriter.close();
+			// make sure we have something in the filestring to write.
+			if (!fileString.isEmpty()) {
+				// create an UTF-8 formatted printwriter to write to disk
+				PrintWriter fileWriter = new PrintWriter(outFileName, "UTF-8");
+
+				// just call print to write the whole set of messages (filestring) 
+				// in one go
+				fileWriter.print(fileString);
+
+				// done with file
+				fileWriter.close();
+			}
 
 			// Remember the time we wrote this file in seconds
 			lastFileWriteTime = timeNow / 1000;

@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import org.apache.log4j.Logger;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -33,6 +34,11 @@ public class Utility {
 
 	private static final String EMPTY_STRING = "";
 	private static final String COMMENT_IDENTIFIER = "#";
+
+	/**
+	 * Log4J logger for Consumer
+	 */
+	static Logger logger = Logger.getLogger(Producer.class);
 
 	/** Converts the provided string from a serialized JSON string, populating
 	 * members
@@ -84,6 +90,7 @@ public class Utility {
 					.newXMLGregorianCalendar(calendar).normalize()
 					.toXMLFormat();
 		} catch (Exception e) {
+			logger.error("Exception formatting gregorian calendar: " + e.toString());
 			return null;
 		}
 	}
@@ -134,6 +141,7 @@ public class Utility {
 			return DatatypeFactory.newInstance().newXMLGregorianCalendar(
 					toParse);
 		} catch (Exception e) {
+			logger.error("Exception formatting XML gregorian calendar: " + e.toString());
 			return null;
 		}
 	}
@@ -190,7 +198,7 @@ public class Utility {
 		// read the config file
 		File configFile = new File(configFileName);
 		if (!configFile.exists()) {
-			System.out.println("Error, configuration file not found.");
+			logger.error("Error, configuration file not found.");
 			return(null);
 		}
 

@@ -160,6 +160,8 @@ public class ConsumerClient {
 			BasicConfigurator.configure();
 		}
 
+		logger.info("----------Consumer Client Startup----------");
+
 		// get file extension
 		if (configJSON.containsKey(FILE_EXTENSION)) {
 			fileExtension = (String) configJSON.get(FILE_EXTENSION);
@@ -274,7 +276,7 @@ public class ConsumerClient {
 			System.exit(1);
 		}
 
-		logger.info("Processed Config.");
+		logger.info("----------Processed Config----------");
 
 		// create consumer
 		Consumer m_Consumer = new Consumer(brokerConfig, heartbeatDirectory);
@@ -282,7 +284,7 @@ public class ConsumerClient {
 		// subscribe to topics
 		m_Consumer.subscribe(topicList);
 
-		logger.info("Startup, version : " + 
+		logger.info("Broker version: " + 
 			m_Consumer.VERSION_MAJOR + "." + m_Consumer.VERSION_MINOR + "." + 
 			m_Consumer.VERSION_PATCH);
 
@@ -322,6 +324,11 @@ public class ConsumerClient {
 
 				// nullcheck brokerMessages (null means no messages)
 				if (brokerMessages == null) {
+					continue;
+				}
+
+				// make sure we got some messages
+				if (brokerMessages.size() == 0) {
 					continue;
 				}
 

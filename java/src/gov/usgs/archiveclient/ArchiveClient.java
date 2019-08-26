@@ -112,6 +112,8 @@ public class ArchiveClient {
 			BasicConfigurator.configure();
 		}
 
+		logger.info("----------Archive Client Startup----------");
+
 		// get file extension
 		if (configJSON.containsKey(FILE_EXTENSION)) {
 			fileExtension = (String) configJSON.get(FILE_EXTENSION);
@@ -180,7 +182,7 @@ public class ArchiveClient {
 			System.exit(1);
 		}
 
-		logger.info("Processed Config.");
+		logger.info("----------Processed Config----------");
 
 		// create consumer
 		Consumer m_Consumer = new Consumer(brokerConfig);
@@ -188,7 +190,7 @@ public class ArchiveClient {
 		// subscribe to topics
 		m_Consumer.subscribe(topicList);
 
-		logger.info("Startup, version : " + 
+		logger.info("Broker version: " + 
 			m_Consumer.VERSION_MAJOR + "." + m_Consumer.VERSION_MINOR + "." + 
 			m_Consumer.VERSION_PATCH);
 

@@ -5,6 +5,7 @@ import java.util.*;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.apache.log4j.Logger;
 
 /**
  * A base class for hazdev broker clients, providing conversion functions
@@ -27,7 +28,7 @@ public class ClientBase {
 	 */
 	public static final Integer VERSION_MAJOR = 0;
 	public static final Integer VERSION_MINOR = 2;
-	public static final Integer VERSION_PATCH = 3; 
+	public static final Integer VERSION_PATCH = 4; 
 
 	/**
 	 * Client Configuration ID
@@ -35,11 +36,14 @@ public class ClientBase {
 	public String CONFIGTYPE_STRING = "";
 
 	/**
+	 * Log4J logger for ClientBase
+	 */
+	static Logger baseLogger = Logger.getLogger(ClientBase.class);
+
+	/**
 	 * The constructor for the ClientBase class.
 	 */
 	public ClientBase() {
-		System.out.println("Hazdev-Broker version : " + VERSION_MAJOR + "." + 
-			VERSION_MINOR + "." + VERSION_PATCH);
 	}
 
 	/**
@@ -55,6 +59,16 @@ public class ClientBase {
 	 */
 	public Properties convertJSONStringToProp(String configString)
 			throws ParseException {
+
+		if (configString == null) {
+			baseLogger.error("Null configuration string.");
+			return (null);
+		}
+
+		if ("".equals(configString)) {
+			baseLogger.error("Empty configuration string.");
+			return (null);
+		}
 
 		// convert from a string
 		JSONObject configObject = Utility.fromJSONString(configString);
@@ -81,14 +95,17 @@ public class ClientBase {
 		if (configObject.containsKey(TYPE_KEY)) {
 			if (!configObject.get(TYPE_KEY).toString()
 					.equals(CONFIGTYPE_STRING)) {
+				baseLogger.error("Wrong configuration type.");
 				return (null);
 			}
 		} else {
+			baseLogger.error("Missing configuration type.");
 			return (null);
 		}
 
 		// check for properties key
 		if (!configObject.containsKey(PROPERTIES_KEY)) {
+			baseLogger.error("Missing properties.");
 			return (null);
 		}
 

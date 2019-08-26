@@ -216,14 +216,21 @@ public class ArchiveClient {
 
 					// add all messages in brokerMessages to queue
 					for (int i = 0; i < brokerMessages.size(); i++) {
-
 						// get string
 						String message = brokerMessages.get(i);
+
+						// nullcheck
+						if (message == null) {
+							continue;
+						}
+						if (message.length() == 0) {
+							continue;
+						}
+
 						logger.debug(message);
 
 						// check to see if we were newline terminated, add a
-						// newline
-						// if we were not
+						// newline if we were not
 						if (message.charAt(message.length() - 1) != '\n') {
 							message = message.concat("\n");
 						}
@@ -234,6 +241,8 @@ public class ArchiveClient {
 					
 					// make sure all messages written to disk
 					fileWriter.flush();
+					logger.info("Updated Archive File " + fileName + " with " 
+						+ String.valueOf(brokerMessages.size()) + " additional messages.");
 				}
 
 				// get current date

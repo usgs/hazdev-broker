@@ -337,6 +337,15 @@ public class ConsumerClient {
 
 					// get message as string
 					String message = brokerMessages.get(i);
+
+					// nullcheck
+					if (message == null) {
+						continue;
+					}
+					if (message.length() == 0) {
+						continue;
+					}				
+						
 					logger.debug(message);
 
 					// add string to queue

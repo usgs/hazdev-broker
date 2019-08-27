@@ -345,7 +345,7 @@ public class ConsumerClient {
 					if (message.length() == 0) {
 						continue;
 					}				
-						
+
 					logger.debug(message);
 
 					// add string to queue
@@ -429,6 +429,14 @@ public class ConsumerClient {
 
 				// get the next message to write
 				String messageString = fileQueue.remove();
+
+				// nullcheck
+				if (messageString == null) {
+					continue;
+				}
+				if (messageString.length() == 0) {
+					continue;
+				}	
 
 				// check to see if the message was newline terminated, add a newline
 				// if it isn't

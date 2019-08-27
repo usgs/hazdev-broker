@@ -58,7 +58,7 @@ public class ArchiveClient {
 
 	/**
 	 * Optional configuration value defining the maximum time to wait before 
-	 * returning from polling the consumer in seconds
+	 * returning from polling the consumer in seconds, default is 10 seconds
 	 */
 	private static long pollTimeout = 10;
 
@@ -161,7 +161,7 @@ public class ArchiveClient {
 			System.exit(1);
 		}
 
-		// get file name
+		// get poll timeout
 		if (configJSON.containsKey(POLL_TIMEOUT)) {
 			pollTimeout = (long) configJSON.get(POLL_TIMEOUT);
 			logger.info("Using configured poll timeout of: " + String.valueOf(pollTimeout));
@@ -268,6 +268,7 @@ public class ArchiveClient {
 				
 				// make sure all messages written to disk
 				fileWriter.flush();
+				
 				logger.info("Updated Archive File: " + outFileName + " with " 
 					+ String.valueOf(brokerMessages.size()) + " additional message(s).");
 

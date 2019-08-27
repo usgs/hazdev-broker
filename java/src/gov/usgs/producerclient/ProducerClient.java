@@ -232,6 +232,14 @@ public class ProducerClient {
 					// get message
 					String message = messageList.get(i);
 
+					// nullcheck
+					if (message == null) {
+						continue;
+					}
+					if (message.length() == 0) {
+						continue;
+					}
+
 					// log it
 					logger.debug("Sending message: " + message);
 

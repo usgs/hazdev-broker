@@ -132,6 +132,8 @@ public class ProducerClient {
 			BasicConfigurator.configure();
 		}
 
+		logger.info("----------Producer Client Startup----------");
+
 		// get file extension
 		if (configJSON.containsKey(FILE_EXTENSION)) {
 			fileExtension = (String) configJSON.get(FILE_EXTENSION);
@@ -207,12 +209,12 @@ public class ProducerClient {
 			System.exit(1);
 		}
 
-		logger.info("Processed Config.");
+		logger.info("----------Processed Config----------");
 
 		// create producer
 		Producer m_Producer = new Producer(brokerConfig, heartbeatInterval);
 
-		logger.info("Startup, version : " + 
+		logger.info("Broker version: " + 
 			m_Producer.VERSION_MAJOR + "." + m_Producer.VERSION_MINOR + "." + 
 			m_Producer.VERSION_PATCH);
 
@@ -229,6 +231,14 @@ public class ProducerClient {
 
 					// get message
 					String message = messageList.get(i);
+
+					// nullcheck
+					if (message == null) {
+						continue;
+					}
+					if (message.length() == 0) {
+						continue;
+					}
 
 					// log it
 					logger.debug("Sending message: " + message);

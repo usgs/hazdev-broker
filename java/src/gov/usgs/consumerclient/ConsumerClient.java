@@ -160,6 +160,8 @@ public class ConsumerClient {
 			BasicConfigurator.configure();
 		}
 
+		logger.info("----------Consumer Client Startup----------");
+
 		// get file extension
 		if (configJSON.containsKey(FILE_EXTENSION)) {
 			fileExtension = (String) configJSON.get(FILE_EXTENSION);
@@ -274,7 +276,7 @@ public class ConsumerClient {
 			System.exit(1);
 		}
 
-		logger.info("Processed Config.");
+		logger.info("----------Processed Config----------");
 
 		// create consumer
 		Consumer m_Consumer = new Consumer(brokerConfig, heartbeatDirectory);
@@ -282,7 +284,7 @@ public class ConsumerClient {
 		// subscribe to topics
 		m_Consumer.subscribe(topicList);
 
-		logger.info("Startup, version : " + 
+		logger.info("Broker version: " + 
 			m_Consumer.VERSION_MAJOR + "." + m_Consumer.VERSION_MINOR + "." + 
 			m_Consumer.VERSION_PATCH);
 
@@ -325,11 +327,25 @@ public class ConsumerClient {
 					continue;
 				}
 
+				// make sure we got some messages
+				if (brokerMessages.size() == 0) {
+					continue;
+				}
+
 				// add all messages in brokerMessages to file queue
 				for (int i = 0; i < brokerMessages.size(); i++) {
 
 					// get message as string
 					String message = brokerMessages.get(i);
+
+					// nullcheck
+					if (message == null) {
+						continue;
+					}
+					if (message.length() == 0) {
+						continue;
+					}				
+
 					logger.debug(message);
 
 					// add string to queue
@@ -413,6 +429,14 @@ public class ConsumerClient {
 
 				// get the next message to write
 				String messageString = fileQueue.remove();
+
+				// nullcheck
+				if (messageString == null) {
+					continue;
+				}
+				if (messageString.length() == 0) {
+					continue;
+				}	
 
 				// check to see if the message was newline terminated, add a newline
 				// if it isn't

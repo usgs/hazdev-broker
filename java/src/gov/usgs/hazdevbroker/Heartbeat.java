@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.apache.log4j.Logger;
 
 /**
  * A class for hazdev broker used to generate, parse, and check heartbeat 
@@ -44,6 +45,11 @@ public class Heartbeat {
 	 * The Client ID for this heartbeat
 	 */
 	private String clientId;
+
+	/**
+	 * Log4J logger for Heartbeat
+	 */
+	static Logger logger = Logger.getLogger(Heartbeat.class);
 
     /**
 	 * The constructor for the Heartbeat class. Initializes members to null 
@@ -134,12 +140,16 @@ public class Heartbeat {
 	 * members
 	 * @param jsonString - A string containing the serialized JSON
 	 * @return Returns true if successful, false otherwise
-	 * @throws ParseException if one occurs
 	 */    
-    public boolean fromJSONString(String jsonString) throws ParseException {
+    public boolean fromJSONString(String jsonString) {
+		JSONObject newJSONObject = null;
 
-        // convert from a string
-        JSONObject newJSONObject = Utility.fromJSONString(jsonString);        
+		// convert from a string, parse exception means it's not a heartbeat
+		try {
+			newJSONObject = Utility.fromJSONString(jsonString);
+		} catch (ParseException e) {
+			return(false);
+		}    
 
         // type
         if (newJSONObject.containsKey(TYPE_KEY)) {
@@ -176,13 +186,13 @@ public class Heartbeat {
     }
 
     /** Writes the Heartbeat to disk as a heartbeat file. If the heartbeat is
-     * not valid the file will not be writen
+     * not valid the file will not be written
 	 * @param heartbeatDirectory - A string containing the directory to write
      * the heartbeat file to, if null, heartbeat files will not be written.
 	 * @throws java.io.FileNotFoundException 
 	 * 			   if a heartbeat file could not be created 
 	 * @throws java.io.UnsupportedEncodingException
-	 *             if an encoding error occured
+	 *             if an encoding error occurred
 	 */      
     public void writeToDisk(String heartbeatDirectory) throws 
             FileNotFoundException, UnsupportedEncodingException {

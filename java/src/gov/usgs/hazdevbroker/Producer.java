@@ -2,6 +2,7 @@ package gov.usgs.hazdevbroker;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import org.apache.log4j.Logger;
 
 import org.apache.kafka.clients.producer.*;
 import org.json.simple.JSONObject;
@@ -37,6 +38,11 @@ public class Producer extends ClientBase {
 	private static String clientId;
 
 	/**
+	 * Log4J logger for Producer
+	 */
+	static Logger logger = Logger.getLogger(Producer.class);
+
+	/**
 	 * The constructor for the Producer class. Initializes members to default or
 	 * null values.
 	 */
@@ -68,8 +74,15 @@ public class Producer extends ClientBase {
 		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
 
 		// configuration/setup
-		Properties configuration = convertJSONConfigToProp(configObject);
-		setup(configuration);
+		Properties configuration = null;
+		try {
+			configuration = convertJSONConfigToProp(configObject);
+		} catch (Exception e) {
+			logger.error("Exception converting configuration: " + e.toString());
+			throw (e);
+		}
+
+		setup(configuration);	
 	}
 
 	/**
@@ -94,8 +107,15 @@ public class Producer extends ClientBase {
 		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
 
 		// configuration/setup
-		Properties configuration = convertJSONConfigToProp(configObject);
-		setup(configuration);
+		Properties configuration = null;
+		try {
+			configuration = convertJSONConfigToProp(configObject);
+		} catch (Exception e) {
+			logger.error("Exception converting configuration: " + e.toString());
+			throw (e);
+		}
+
+		setup(configuration);	
 	}
 
 	/**
@@ -120,8 +140,15 @@ public class Producer extends ClientBase {
 		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
 
 		// configuration/setup
-		Properties configuration = convertJSONStringToProp(configString);
-		setup(configuration);
+		Properties configuration = null;
+		try {
+			configuration = convertJSONStringToProp(configString);
+		} catch (ParseException e) {
+			logger.error("ParseException converting configuration: " + e.toString());
+			throw (e);
+		}
+
+		setup(configuration);	
 	}
 
 	/**
@@ -150,8 +177,15 @@ public class Producer extends ClientBase {
 		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
 
 		// configuration/setup
-		Properties configuration = convertJSONStringToProp(configString);
-		setup(configuration);
+		Properties configuration = null;
+		try {
+			configuration = convertJSONStringToProp(configString);
+		} catch (ParseException e) {
+			logger.error("ParseException converting configuration: " + e.toString());
+			throw (e);
+		}
+
+		setup(configuration);	
 	}
 
 	/**
@@ -169,20 +203,24 @@ public class Producer extends ClientBase {
 			return (false);
 		}
 
-		// build client id
-		if (configProperties.getProperty("client.id") != null) {
-			clientId = configProperties.getProperty("client.id");
+		try {
+			// build client id
+			if (configProperties.getProperty("client.id") != null) {
+				clientId = configProperties.getProperty("client.id");
+			}
+
+			// add any fixed configuration (like the serializer)
+			configProperties.put("key.serializer",
+					"org.apache.kafka.common.serialization.StringSerializer");
+					configProperties.put("value.serializer",
+					"org.apache.kafka.common.serialization.ByteArraySerializer");
+
+			// create the producer
+			producer = new KafkaProducer<String, byte[]>(configProperties);
+		} catch (Exception e) {
+			logger.error("Exception configuring producer: " + e.toString());
+			return(false);
 		}
-
-		// add any fixed configuration (like the serializer)
-		configProperties.put("key.serializer",
-				"org.apache.kafka.common.serialization.StringSerializer");
-				configProperties.put("value.serializer",
-				"org.apache.kafka.common.serialization.ByteArraySerializer");
-
-		// create the producer
-		producer = new KafkaProducer<String, byte[]>(configProperties);
-
 		return(true);
 	}
 
@@ -202,7 +240,12 @@ public class Producer extends ClientBase {
 				topic, data);
 
 		// send it async
-		producer.send(message);
+		try {
+			producer.send(message);
+		} catch (Exception e) { 
+			logger.error("Error calling producer.send: " + e.toString());
+			return ;
+		}
 
 		// send heartbeat message, will not send if heartbeats
 		// are disabled, or if it has not been long enough to
@@ -246,7 +289,12 @@ public class Producer extends ClientBase {
 						new ProducerRecord<String, byte[]>(topic, heartbeatData);	
 
 					// send it async
-					producer.send(heartbeatMessage);
+					try {
+						producer.send(heartbeatMessage);
+					} catch (Exception e) { 
+						logger.error("Error calling producer.send for heartbeat: " + e.toString());
+						return ;
+					}
 				}
 
 				// remember heartbeat time

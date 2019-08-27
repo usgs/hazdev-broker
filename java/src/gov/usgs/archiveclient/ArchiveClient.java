@@ -39,6 +39,7 @@ public class ArchiveClient {
 	public static final String FILE_EXTENSION = "FileExtension";
 	public static final String FILE_NAME = "FileName";
 	public static final String OUTPUT_DIRECTORY = "OutputDirectory";
+	public static final String POLL_TIMEOUT = "PollTimeout";
 
 	/**
 	 * Required configuration string defining the output directory
@@ -56,9 +57,20 @@ public class ArchiveClient {
 	private static String fileName;
 
 	/**
+	 * Optional configuration value defining the maximum time to wait before 
+	 * returning from polling the consumer in seconds, default is 10 seconds
+	 */
+	private static long pollTimeout = 10;
+
+	/**
 	 * Log4J logger for ConsumerClient
 	 */
 	static Logger logger = Logger.getLogger(ArchiveClient.class);
+
+	/**
+	 * Optional configuration string defining the output file name
+	 */
+	private static String outFileName;
 
 	/**
 	 * main function for ArchiveClient
@@ -112,6 +124,8 @@ public class ArchiveClient {
 			BasicConfigurator.configure();
 		}
 
+		logger.info("----------Archive Client Startup----------");
+
 		// get file extension
 		if (configJSON.containsKey(FILE_EXTENSION)) {
 			fileExtension = (String) configJSON.get(FILE_EXTENSION);
@@ -147,6 +161,14 @@ public class ArchiveClient {
 			System.exit(1);
 		}
 
+		// get poll timeout
+		if (configJSON.containsKey(POLL_TIMEOUT)) {
+			pollTimeout = (long) configJSON.get(POLL_TIMEOUT);
+			logger.info("Using configured poll timeout of: " + String.valueOf(pollTimeout));
+		} else {
+			logger.info("Using default poll timeout of: " + String.valueOf(pollTimeout));
+		}
+	
 		// get broker config
 		JSONObject brokerConfig = null;
 		if (configJSON.containsKey(BROKER_CONFIG)) {
@@ -180,7 +202,7 @@ public class ArchiveClient {
 			System.exit(1);
 		}
 
-		logger.info("Processed Config.");
+		logger.info("----------Processed Config----------");
 
 		// create consumer
 		Consumer m_Consumer = new Consumer(brokerConfig);
@@ -188,7 +210,7 @@ public class ArchiveClient {
 		// subscribe to topics
 		m_Consumer.subscribe(topicList);
 
-		logger.info("Startup, version : " + 
+		logger.info("Broker version: " + 
 			m_Consumer.VERSION_MAJOR + "." + m_Consumer.VERSION_MINOR + "." + 
 			m_Consumer.VERSION_PATCH);
 
@@ -206,33 +228,49 @@ public class ArchiveClient {
 			// run until stopped
 			while (true) {
 
-				// get messages from broker
-				ArrayList<String> brokerMessages = m_Consumer.pollString(500);
+				// get messages from broker, wait for a maximum of 10 seconds before 
+				// giving up
+				ArrayList<String> brokerMessages = m_Consumer.pollString(pollTimeout * 1000);
 
 				// nullcheck brokerMessages
-				if (brokerMessages != null) {
-
-					// add all messages in brokerMessages to queue
-					for (int i = 0; i < brokerMessages.size(); i++) {
-
-						// get string
-						String message = brokerMessages.get(i);
-						logger.debug(message);
-
-						// check to see if we were newline terminated, add a
-						// newline
-						// if we were not
-						if (message.charAt(message.length() - 1) != '\n') {
-							message = message.concat("\n");
-						}
-
-						// just call print
-						fileWriter.print(message);
-					}
-					
-					// make sure all messages written to disk
-					fileWriter.flush();
+				if (brokerMessages == null) {
+					continue;
 				}
+
+				if (brokerMessages.size() == 0) {
+					continue;
+				}
+
+				// add all messages in brokerMessages to queue
+				for (int i = 0; i < brokerMessages.size(); i++) {
+					// get string
+					String message = brokerMessages.get(i);
+
+					// nullcheck
+					if (message == null) {
+						continue;
+					}
+					if (message.length() == 0) {
+						continue;
+					}
+
+					logger.debug(message);
+
+					// check to see if we were newline terminated, add a
+					// newline if we were not
+					if (message.charAt(message.length() - 1) != '\n') {
+						message = message.concat("\n");
+					}
+
+					// just call print
+					fileWriter.print(message);
+				}
+				
+				// make sure all messages written to disk
+				fileWriter.flush();
+				
+				logger.info("Updated Archive File: " + outFileName + " with " 
+					+ String.valueOf(brokerMessages.size()) + " additional message(s).");
 
 				// get current date
 				Calendar currentDate = Calendar
@@ -250,6 +288,8 @@ public class ArchiveClient {
 
 					// get the new creation date
 					fileCreationDate = currentDate;
+
+					logger.info("Switched to new Archive File: " + outFileName + ".");
 				}
 			}
 		} catch (Exception e) {
@@ -269,7 +309,7 @@ public class ArchiveClient {
 		
 		// build filename from desired output directory, time, optional
 		// name, and extension
-		String outFileName = "";
+		outFileName = "";
 		if (name != "") {
 			outFileName = outputDirectory + "/" + getUTCDateAsString() + "_"
 					+ name + "." + fileExtension;

@@ -3,6 +3,7 @@ package gov.usgs.hazdevbroker;
 import java.util.*;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
+import org.apache.log4j.Logger;
 
 import org.apache.kafka.clients.consumer.*;
 import org.json.simple.JSONObject;
@@ -39,6 +40,11 @@ public class Consumer extends ClientBase {
 	 * A collection of strings contining the topics 
 	 */	
 	private static Collection<String> topicList;
+
+	/**
+	 * Log4J logger for Consumer
+	 */
+	static Logger logger = Logger.getLogger(Consumer.class);
 
 	/**
 	 * The constructor for the Consumer class. Initializes members to default or
@@ -103,8 +109,15 @@ public class Consumer extends ClientBase {
 		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);		
 
 		// configuration/setup
-		Properties configuration = convertJSONConfigToProp(configObject);
-		setup(configuration);
+		Properties configuration = null;
+		try {
+			configuration = convertJSONConfigToProp(configObject);
+		} catch (Exception e) {
+			logger.error("Exception converting configuration: " + e.toString());
+			throw (e);
+		}
+
+		setup(configuration);	
 	}
 
 	/**
@@ -129,8 +142,15 @@ public class Consumer extends ClientBase {
 		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);		
 
 		// configuration/setup
-		Properties configuration = convertJSONStringToProp(configString);
-		setup(configuration);		
+		Properties configuration = null;
+		try {
+			configuration = convertJSONStringToProp(configString);
+		} catch (ParseException e) {
+			logger.error("ParseException converting configuration: " + e.toString());
+			throw (e);
+		}
+
+		setup(configuration);	
 	}
 
 	/**
@@ -158,7 +178,14 @@ public class Consumer extends ClientBase {
 		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);		
 
 		// configuration/setup
-		Properties configuration = convertJSONStringToProp(configString);
+		Properties configuration = null;
+		try {
+			configuration = convertJSONStringToProp(configString);
+		} catch (ParseException e) {
+			logger.error("ParseException converting configuration: " + e.toString());
+			throw (e);
+		}
+
 		setup(configuration);		
 	}
 
@@ -176,19 +203,24 @@ public class Consumer extends ClientBase {
 			return(false);
 		}
 
-		// add any fixed configuration (like the serializer
-		configProperties.put("key.deserializer",
-				"org.apache.kafka.common.serialization.StringDeserializer");
-		configProperties.put("value.deserializer",
-				"org.apache.kafka.common.serialization.ByteArrayDeserializer");
+		try {
+			// add any fixed configuration (like the serializer
+			configProperties.put("key.deserializer",
+					"org.apache.kafka.common.serialization.StringDeserializer");
+			configProperties.put("value.deserializer",
+					"org.apache.kafka.common.serialization.ByteArrayDeserializer");
 
-		// create the consumer
-		consumer = new KafkaConsumer<String, byte[]>(configProperties);
+			// create the consumer
+			consumer = new KafkaConsumer<String, byte[]>(configProperties);
 
-		// create the heartbeat processor, we need this to tell if a 
-		// message is a heartbeat or not
-		heartbeatProcessor = new Heartbeat();	
-		
+			// create the heartbeat processor, we need this to tell if a 
+			// message is a heartbeat or not
+			heartbeatProcessor = new Heartbeat();	
+		} catch (Exception e) {
+			logger.error("Exception configuring consumer: " + e.toString());
+			return(false);
+		}
+
 		return(true);
 	}
 
@@ -225,15 +257,8 @@ public class Consumer extends ClientBase {
 	 *            arbitrarily long time
 	 * @return Returns an ArrayList&lt;byte[]&gt; containing the data from the broker
 	 *         cluster since the last time it was polled.
-	 * @throws org.json.simple.parser.ParseException
-	 *             if a heartbeat parse exception occurs
-	 * @throws java.io.FileNotFoundException 
-	 * 			   if a heartbeat file could not be created 
-	 * @throws java.io.UnsupportedEncodingException
-	 *             if an encoding error occured
 	 */
-	public ArrayList<byte[]> poll(long timeout) throws ParseException,
-			FileNotFoundException, UnsupportedEncodingException {
+	public ArrayList<byte[]> poll(long timeout) {
 
 		ArrayList<byte[]> data = new ArrayList<byte[]>();
 
@@ -243,16 +268,31 @@ public class Consumer extends ClientBase {
 		}
 
 		// get any messages pending for our topic(s) from kafka
-		ConsumerRecords<String, byte[]> records = consumer.poll(timeout);
+		ConsumerRecords<String, byte[]> records = null;
+		try {
+			records = consumer.poll(timeout);
+		} catch (Exception e) { 
+			logger.error("Error calling consumer.poll: " + e.toString());
+			return (null);
+		}
+
+		// nullcheck
+		if (records == null) {
+			return(null);
+		}
 
 		// go though each message, adding it to the return ArrayList
 		// removing heartbeat messages
 		for (ConsumerRecord<String, byte[]> record : records) {
+			// nullcheck
+			if (record == null) {
+				continue;
+			}
 
 			// convert to string to see if this is a heartbeat
 			// note that if poll was called by pollString, we're
 			// converting *twice*, I'm not sure how to check for heartbeats
-			// more efficenty than this tho
+			// more efficiently than this tho
 			String recordString = new String(record.value());
 
 			// don't add heartbeats to the data arraylist
@@ -275,23 +315,26 @@ public class Consumer extends ClientBase {
 	 *            arbitrarily long time
 	 * @return Returns an ArrayList&lt;String&gt; containing the messages from the
 	 *         broker cluster since the last time it was polled.
-	 * @throws org.json.simple.parser.ParseException
-	 *             if a heartbeat parse exception occurs
-	 * @throws java.io.FileNotFoundException 
-	 * 			   if a heartbeat file could not be created 
-	 * @throws java.io.UnsupportedEncodingException
-	 *             if an encoding error occured
 	 */
-	public ArrayList<String> pollString(long timeout) throws ParseException,
-			FileNotFoundException, UnsupportedEncodingException {
+	public ArrayList<String> pollString(long timeout) {
 
 		ArrayList<String> messages = new ArrayList<String>();
 
 		// get data
 		ArrayList<byte[]> data = poll(timeout);
 
+		// nullcheck
+		if (data == null) {
+			return(null);
+		}
+
 		// convert bytes to strings
 		for (byte[] aData : data) {
+			// nullcheck
+			if (aData == null) {
+				continue;
+			}
+			
 			messages.add(new String(aData));
 		}
 
@@ -303,13 +346,8 @@ public class Consumer extends ClientBase {
 	 *
 	 * @param aHeartbeat
 	 *            - A Heartbeat containing the heartbeat to handle
-	 * @throws java.io.FileNotFoundException 
-	 * 			   if a heartbeat file could not be created 
-	 * @throws java.io.UnsupportedEncodingException
-	 *             if an encoding error occured
 	 */	
-	public void handleHeartbeat(Heartbeat aHeartbeat) throws 
-			FileNotFoundException, UnsupportedEncodingException {
+	public void handleHeartbeat(Heartbeat aHeartbeat) {
 
 		// is this a valid heartbeat
 		if (aHeartbeat.isValid() == false) {
@@ -322,13 +360,21 @@ public class Consumer extends ClientBase {
 			return;
 		}
 
-		// set the time the heartbeat was recieved in case our 
+		// set the time the heartbeat was received in case our 
 		// caller is monitoring this
 		setLastHeartbeatTime(System.currentTimeMillis() / 1000);
 
 		// write the heartbeat to disk (won't write if heartbeatDirectory is
 		// null)
-		aHeartbeat.writeToDisk(heartbeatDirectory);
+		try {
+			aHeartbeat.writeToDisk(heartbeatDirectory);
+		} catch (FileNotFoundException e) {
+			logger.error("FileNotFoundException " + e.toString());
+			return;
+		} catch (UnsupportedEncodingException e) {
+			logger.error("UnsupportedEncodingException " + e.toString());
+			return;
+		}  
 	}
 
 	/**

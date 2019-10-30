@@ -323,34 +323,28 @@ public class ConsumerClient {
 				ArrayList<String> brokerMessages = m_Consumer.pollString(500);
 
 				// nullcheck brokerMessages (null means no messages)
-				if (brokerMessages == null) {
-					continue;
-				}
+				// and make sure we got some messages
+				if ((brokerMessages != null) && (brokerMessages.size() != 0)) {
+					// add all messages in brokerMessages to file queue
+					for (int i = 0; i < brokerMessages.size(); i++) {
 
-				// make sure we got some messages
-				if (brokerMessages.size() == 0) {
-					continue;
-				}
+						// get message as string
+						String message = brokerMessages.get(i);
 
-				// add all messages in brokerMessages to file queue
-				for (int i = 0; i < brokerMessages.size(); i++) {
+						// nullcheck
+						if (message == null) {
+							continue;
+						}
+						if (message.length() == 0) {
+							continue;
+						}				
 
-					// get message as string
-					String message = brokerMessages.get(i);
+						logger.debug(message);
 
-					// nullcheck
-					if (message == null) {
-						continue;
+						// add string to queue
+						fileQueue.add(message);
 					}
-					if (message.length() == 0) {
-						continue;
-					}				
-
-					logger.debug(message);
-
-					// add string to queue
-					fileQueue.add(message);
-				}
+				}		
 
 				// write file containing messages to disk
 				// check to see if we have anything to write
@@ -389,7 +383,7 @@ public class ConsumerClient {
 						// because otherwise that would have been handled above
 						writeMessagesToDisk(fileQueue.size());
 					}
-				}	
+				}
 			} catch	(Exception e) {
 
 				// log exception

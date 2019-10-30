@@ -343,8 +343,8 @@ public class ConsumerClient {
 
 						// add string to queue
 						fileQueue.add(message);
-					}
-				}		
+					} // end for each new broker message
+				}	// end if there are new broker messages	
 
 				// write file containing messages to disk
 				// check to see if we have anything to write

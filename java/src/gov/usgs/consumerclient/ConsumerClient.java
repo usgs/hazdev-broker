@@ -346,9 +346,15 @@ public class ConsumerClient {
 
 						// nullcheck
 						if (message == null) {
+							// sleep a little while before the next loop
+							Thread.sleep(100);
+
 							continue;
 						}
 						if (message.length() == 0) {
+							// sleep a little while before the next loop
+							Thread.sleep(100);
+
 							continue;
 						}				
 
@@ -365,6 +371,10 @@ public class ConsumerClient {
 
 					// nothing to do
 					logger.debug("No messages to write.");
+
+					// sleep a little while before the next loop
+					Thread.sleep(100);
+
 					continue;
 				// check to see if we have enough messages to write
 				} else if (fileQueue.size() >= messagesPerFile) {
@@ -402,6 +412,15 @@ public class ConsumerClient {
 				// log exception
 				logger.error(e.toString());
 			}	
+
+			// sleep a little while before the next loop
+			try {
+				Thread.sleep(100);
+			} catch	(Exception e) {
+
+				// log exception
+				logger.error(e.toString());
+			}
 		}
 	}
 
@@ -426,12 +445,16 @@ public class ConsumerClient {
 
 			// did we just use this file name?
 			if (outFileName == lastFileName) {
+				logger.info("Modifying outFileName: " + outFileName 
+					+ " because it matched lastFileName ");
 				fileNameDuplicateCount++;
 
 				// redo this file name to make it unique by adding the file name count
 				outFileName = outputDirectory + "/" + timeNow.toString()
 					+ fileName + "_" + Integer.toString(fileNameDuplicateCount) 
 					+ "." + fileExtension;
+
+					logger.info("New  outFileName: " + outFileName);
 			} else {
 				fileNameDuplicateCount = 0;
 			}

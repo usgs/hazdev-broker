@@ -135,6 +135,8 @@ public class ConsumerClient {
 		timePerFile = null;
 		heartbeatInterval = null;
 		writeHeartbeatFile = (boolean) false;
+		fileNameDuplicateCount = 0;
+		lastFileName = "";
 
 		// init last write time to now
 		lastFileWriteTime = (Long) (System.currentTimeMillis() / 1000);
@@ -418,8 +420,7 @@ public class ConsumerClient {
 			Long timeNow = System.currentTimeMillis();
 
 			// build filename from desired output directory, time, optional
-			// name,
-			// and extension
+			// name, and extension
 			String outFileName = outputDirectory + "/" + timeNow.toString()
 					+ fileName + "." + fileExtension;
 
@@ -427,9 +428,9 @@ public class ConsumerClient {
 			if (outFileName == lastFileName) {
 				fileNameDuplicateCount++;
 
-				// redo this file name to make it unique
+				// redo this file name to make it unique by adding the file name count
 				outFileName = outputDirectory + "/" + timeNow.toString()
-					+ fileName + + "_" + Integer.toString(fileNameDuplicateCount) 
+					+ fileName + "_" + Integer.toString(fileNameDuplicateCount) 
 					+ "." + fileExtension;
 			} else {
 				fileNameDuplicateCount = 0;
@@ -481,6 +482,8 @@ public class ConsumerClient {
 
 			// Remember the time we wrote this file in seconds
 			lastFileWriteTime = timeNow / 1000;
+
+			// remember the last file name we used
 			lastFileName = outFileName;
 		} catch (Exception e) {
 

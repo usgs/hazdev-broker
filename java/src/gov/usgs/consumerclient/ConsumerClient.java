@@ -101,6 +101,17 @@ public class ConsumerClient {
 	private static Long lastFileWriteTime;
 
 	/**
+	 * String containing the last file name used;
+	 */
+	private static String lastFileName;
+
+	/**
+	 * Integer containing the count of duplicate file names;
+	 */
+	private static Integer fileNameDuplicateCount;
+
+
+	/**
 	 * main function for ConsumerClient
 	 *
 	 * @param args
@@ -412,6 +423,18 @@ public class ConsumerClient {
 			String outFileName = outputDirectory + "/" + timeNow.toString()
 					+ fileName + "." + fileExtension;
 
+			// did we just use this file name?
+			if (outFileName == lastFileName) {
+				fileNameDuplicateCount++;
+
+				// redo this file name to make it unique
+				outFileName = outputDirectory + "/" + timeNow.toString()
+					+ fileName + + "_" + Integer.toString(fileNameDuplicateCount) 
+					+ "." + fileExtension;
+			} else {
+				fileNameDuplicateCount = 0;
+			}
+
 			// Create string to write to file
 			String fileString = "";
 
@@ -458,7 +481,7 @@ public class ConsumerClient {
 
 			// Remember the time we wrote this file in seconds
 			lastFileWriteTime = timeNow / 1000;
-
+			lastFileName = outFileName;
 		} catch (Exception e) {
 
 			// log exception

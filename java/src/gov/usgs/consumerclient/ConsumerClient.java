@@ -46,6 +46,12 @@ public class ConsumerClient {
 	public static final String HEARTBEAT_INTERVAL = "HeartbeatInterval";
 	public static final String WRITE_HEARTBEAT_FILE = "WriteHeartbeatFile";
 
+	/** 
+	 * Long constant containing the time to sleep in ms between file writes to 
+	 * ensure file name uniqueness.
+	 */
+	public static final Long FILE_SLEEP_MS = 10L;
+	
 	/**
 	 * Required configuration string defining the output directory
 	 */
@@ -101,17 +107,6 @@ public class ConsumerClient {
 	private static Long lastFileWriteTime;
 
 	/**
-	 * String containing the last file name used;
-	 */
-	private static String lastFileName;
-
-	/**
-	 * Integer containing the count of duplicate file names;
-	 */
-	private static Integer fileNameDuplicateCount;
-
-
-	/**
 	 * main function for ConsumerClient
 	 *
 	 * @param args
@@ -135,8 +130,6 @@ public class ConsumerClient {
 		timePerFile = null;
 		heartbeatInterval = null;
 		writeHeartbeatFile = (boolean) false;
-		fileNameDuplicateCount = 0;
-		lastFileName = "";
 
 		// init last write time to now
 		lastFileWriteTime = (Long) (System.currentTimeMillis() / 1000);
@@ -346,15 +339,9 @@ public class ConsumerClient {
 
 						// nullcheck
 						if (message == null) {
-							// sleep a little while before the next loop
-							Thread.sleep(100);
-
 							continue;
 						}
 						if (message.length() == 0) {
-							// sleep a little while before the next loop
-							Thread.sleep(100);
-
 							continue;
 						}				
 
@@ -371,9 +358,6 @@ public class ConsumerClient {
 
 					// nothing to do
 					logger.debug("No messages to write.");
-
-					// sleep a little while before the next loop
-					Thread.sleep(100);
 
 					continue;
 				// check to see if we have enough messages to write
@@ -412,15 +396,6 @@ public class ConsumerClient {
 				// log exception
 				logger.error(e.toString());
 			}	
-
-			// sleep a little while before the next loop
-			try {
-				Thread.sleep(100);
-			} catch	(Exception e) {
-
-				// log exception
-				logger.error(e.toString());
-			}
 		}
 	}
 
@@ -435,6 +410,10 @@ public class ConsumerClient {
 	public static boolean writeMessagesToDisk(Integer numToWrite) {
 
 		try {
+			// sleep a little while before writing the file to avoid
+			// file name duplication issues
+			Thread.sleep(FILE_SLEEP_MS);
+
 			// get current time in milliseconds
 			Long timeNow = System.currentTimeMillis();
 
@@ -442,22 +421,6 @@ public class ConsumerClient {
 			// name, and extension
 			String outFileName = outputDirectory + "/" + timeNow.toString()
 					+ fileName + "." + fileExtension;
-
-			// did we just use this file name?
-			if (outFileName == lastFileName) {
-				logger.info("Modifying outFileName: " + outFileName 
-					+ " because it matched lastFileName ");
-				fileNameDuplicateCount++;
-
-				// redo this file name to make it unique by adding the file name count
-				outFileName = outputDirectory + "/" + timeNow.toString()
-					+ fileName + "_" + Integer.toString(fileNameDuplicateCount) 
-					+ "." + fileExtension;
-
-					logger.info("New  outFileName: " + outFileName);
-			} else {
-				fileNameDuplicateCount = 0;
-			}
 
 			// Create string to write to file
 			String fileString = "";
@@ -505,9 +468,6 @@ public class ConsumerClient {
 
 			// Remember the time we wrote this file in seconds
 			lastFileWriteTime = timeNow / 1000;
-
-			// remember the last file name we used
-			lastFileName = outFileName;
 		} catch (Exception e) {
 
 			// log exception

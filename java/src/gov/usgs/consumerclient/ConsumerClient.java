@@ -46,6 +46,12 @@ public class ConsumerClient {
 	public static final String HEARTBEAT_INTERVAL = "HeartbeatInterval";
 	public static final String WRITE_HEARTBEAT_FILE = "WriteHeartbeatFile";
 
+	/** 
+	 * Long constant containing the time to sleep in ms between file writes to 
+	 * ensure file name uniqueness.
+	 */
+	public static final Long FILE_SLEEP_MS = 10L;
+	
 	/**
 	 * Required configuration string defining the output directory
 	 */
@@ -352,6 +358,7 @@ public class ConsumerClient {
 
 					// nothing to do
 					logger.debug("No messages to write.");
+
 					continue;
 				// check to see if we have enough messages to write
 				} else if (fileQueue.size() >= messagesPerFile) {
@@ -403,12 +410,15 @@ public class ConsumerClient {
 	public static boolean writeMessagesToDisk(Integer numToWrite) {
 
 		try {
+			// sleep a little while before writing the file to avoid
+			// file name duplication issues
+			Thread.sleep(FILE_SLEEP_MS);
+
 			// get current time in milliseconds
 			Long timeNow = System.currentTimeMillis();
 
 			// build filename from desired output directory, time, optional
-			// name,
-			// and extension
+			// name, and extension
 			String outFileName = outputDirectory + "/" + timeNow.toString()
 					+ fileName + "." + fileExtension;
 
@@ -458,7 +468,6 @@ public class ConsumerClient {
 
 			// Remember the time we wrote this file in seconds
 			lastFileWriteTime = timeNow / 1000;
-
 		} catch (Exception e) {
 
 			// log exception

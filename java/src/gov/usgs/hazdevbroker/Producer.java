@@ -36,6 +36,11 @@ public class Producer extends ClientBase {
 	 * The client id for this producer
 	 */	
 	private static String clientId;
+        
+        /**
+         * When true a heartbeat message also be sent with each send.  Default is true.
+         */
+        private boolean autoSendHeartbeat = true;
 
 	/**
 	 * Log4J logger for Producer
@@ -250,7 +255,9 @@ public class Producer extends ClientBase {
 		// send heartbeat message, will not send if heartbeats
 		// are disabled, or if it has not been long enough to
 		// send a heartbeat
-		sendHeartbeat(topic);	
+                if (autoSendHeartbeat) {
+                  sendHeartbeat(topic);	
+                }
 	}
 
 	/**
@@ -345,5 +352,13 @@ public class Producer extends ClientBase {
 	 */
 	public void setLastHeartbeatTime(Long lastHeartbeatTime) {
 		this.lastHeartbeatTime = lastHeartbeatTime;
-	}  	
+	}  
+        
+        /**
+         * Send an additional heartbeat message with each send if sendHeartbeat == true
+         * @param sendHeartbeat boolean, true to send heartbeat
+         */
+        public void toggleSendingHeartbeat(boolean sendHeartbeat) {
+                this.autoSendHeartbeat = sendHeartbeat;
+        }
 }

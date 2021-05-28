@@ -17,10 +17,10 @@
 
 	<!-- CLASSPATH -->
 	<fileset dir="${lib}" id="classpath.fileset">
-		<include name="kafka-clients-1.0.1.jar" />
+		<include name="kafka-clients-2.8.0.jar" />
 		<include name="json-simple-1.1.1.jar" />
-		<include name="slf4j-log4j12-1.7.21.jar" />
-		<include name="slf4j-api-1.7.21.jar" />
+		<include name="slf4j-log4j12-1.7.30.jar" />
+		<include name="slf4j-api-1.7.30.jar" />
 		<include name="log4j-1.2.17.jar" />
 	</fileset>
 

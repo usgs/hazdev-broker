@@ -73,6 +73,17 @@ public class ArchiveClient {
 	private static String outFileName;
 
 	/**
+	 * Long defining the number seconds between logging kafka metrics, 
+	 * default is 30 seconds
+	 */
+	private static Long metricInterval;
+
+	/**
+	 * Variable containing time the last time metrics were logged.
+	 */
+	private static Long lastMetricTime;
+
+	/**
 	 * main function for ArchiveClient
 	 *
 	 * @param args
@@ -91,6 +102,8 @@ public class ArchiveClient {
 		outputDirectory = null;
 		fileExtension = null;
 		fileName = new String();
+		metricInterval = 30L;
+		lastMetricTime = (Long) (System.currentTimeMillis() / 1000);
 
 		// parse config file into json
 		JSONObject configJSON = Utility.readConfigurationFromFile(args[0]);
@@ -204,6 +217,10 @@ public class ArchiveClient {
 
 		logger.info("----------Processed Config----------");
 
+		// get client id
+		JSONObject brokerProps = (JSONObject) brokerConfig.get("Properties");
+		String clientID = (String) brokerProps.get("client.id");
+
 		// create consumer
 		Consumer m_Consumer = new Consumer(brokerConfig);
 
@@ -231,6 +248,8 @@ public class ArchiveClient {
 				// get messages from broker, wait for a maximum of 10 seconds before 
 				// giving up
 				ArrayList<String> brokerMessages = m_Consumer.pollString(pollTimeout * 1000);
+
+				logKafkaMetrics(m_Consumer, clientID, topicList);
 
 				// nullcheck brokerMessages
 				if (brokerMessages == null) {
@@ -331,4 +350,43 @@ public class ArchiveClient {
 		return utcTime;
 	}
 
+	public static void logKafkaMetrics(Consumer myConsumer, 
+		String clientID, ArrayList<String> topicList) {
+
+		// get current time in seconds
+		Long timeNow = System.currentTimeMillis() / 1000;
+
+		// calculate elapsed time
+		Long elapsedTime = timeNow - lastMetricTime;
+
+		if (elapsedTime >= metricInterval) {
+			// overall metrics
+			ArrayList<String> recordsLagMax = myConsumer.getKafkaMetric(
+				"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + 
+				clientID, "records-lag-max");
+			logger.info("KafkaMetric - " + recordsLagMax.toString());
+	
+			ArrayList<String> fetchRate = myConsumer.getKafkaMetric(
+				"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + 
+				clientID, "fetch-rate");
+			logger.info("KafkaMetric - " + fetchRate.toString());
+	
+			// topic specific metrics
+			for (int i = 0; i < topicList.size(); i++) {
+				String topic = topicList.get(i);
+	
+				ArrayList<String> bytesConsumedRate = myConsumer.getKafkaMetric(
+					"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" 
+					+ clientID + ",topic=" + topic, "bytes-consumed-rate");
+				logger.info("KafkaMetric - " + topic + " - " + bytesConsumedRate.toString());
+	
+				ArrayList<String> recordsConsumedRate =myConsumer.getKafkaMetric(
+					"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" 
+					+ clientID + ",topic=" + topic, "records-consumed-rate");
+				logger.info("KafkaMetric - " + topic + " - " + recordsConsumedRate.toString());
+			}
+
+			lastMetricTime = timeNow;
+		}
+	}
 }

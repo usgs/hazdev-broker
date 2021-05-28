@@ -6,6 +6,7 @@ import java.io.UnsupportedEncodingException;
 import org.apache.log4j.Logger;
 
 import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.PartitionInfo;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
@@ -375,6 +376,32 @@ public class Consumer extends ClientBase {
 			logger.error("UnsupportedEncodingException " + e.toString());
 			return;
 		}  
+	}
+
+	/**
+	 * this function gets the partition ids for a topic
+	 *
+	 * @param topic
+	 *            - A string containing the topic to query
+	 */	
+	public ArrayList<String> getPartitions(String topic) {
+		ArrayList<String> partitions = new ArrayList<String>();
+
+		if (consumer == null) {
+			return partitions;
+		}
+
+		try{
+			List<PartitionInfo> partitionInfo = consumer.partitionsFor(topic);
+
+			for (int i = 0; i < partitionInfo.size(); i++) {
+				PartitionInfo aPartition = partitionInfo.get(i);
+				partitions.add(String.valueOf(aPartition.partition()));
+			}
+		} catch (Exception e) {
+		}
+
+		return partitions;
 	}
 
 	/**

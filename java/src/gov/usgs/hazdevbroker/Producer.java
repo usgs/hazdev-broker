@@ -354,11 +354,11 @@ public class Producer extends ClientBase {
 		this.lastHeartbeatTime = lastHeartbeatTime;
 	}  
         
-        /**
-         * Send an additional heartbeat message with each send if sendHeartbeat == true
-         * @param sendHeartbeat boolean, true to send heartbeat
-         */
-        public void toggleSendingHeartbeat(boolean sendHeartbeat) {
-                this.autoSendHeartbeat = sendHeartbeat;
-        }
+	/**
+	 * Send an additional heartbeat message with each send if sendHeartbeat == true
+	 * @param sendHeartbeat boolean, true to send heartbeat
+	 */
+	public void toggleSendingHeartbeat(boolean sendHeartbeat) {
+			this.autoSendHeartbeat = sendHeartbeat;
+	}
 }

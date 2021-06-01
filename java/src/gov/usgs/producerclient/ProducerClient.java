@@ -71,6 +71,17 @@ public class ProducerClient {
 	private static Long lastHeartbeatTime;
 
 	/**
+	 * Long defining the number seconds between logging kafka metrics, 
+	 * default is 30 seconds
+	 */
+	private static Long metricInterval;
+
+	/**
+	 * Variable containing time the last time metrics were logged.
+	 */
+	private static Long lastMetricTime;
+
+	/**
 	 * Log4J logger for ProducerClient
 	 */
 	static Logger logger = Logger.getLogger(ProducerClient.class);
@@ -96,6 +107,8 @@ public class ProducerClient {
 		fileExtension = null;
 		timePerFile = null;
 		heartbeatInterval = null;
+		metricInterval = 30L;
+		lastMetricTime = (Long) (System.currentTimeMillis() / 1000);
 
 		// init last heartbeat time to now
 		lastHeartbeatTime = (Long) (System.currentTimeMillis() / 1000);
@@ -211,6 +224,10 @@ public class ProducerClient {
 
 		logger.info("----------Processed Config----------");
 
+		// get client id
+		JSONObject brokerProps = (JSONObject) brokerConfig.get("Properties");
+		String clientID = (String) brokerProps.get("client.id");
+
 		// create producer
 		Producer m_Producer = new Producer(brokerConfig, heartbeatInterval);
 
@@ -222,6 +239,8 @@ public class ProducerClient {
 		while (true) {
 
 			ArrayList<String> messageList = readMessagesFromFile();
+
+			logKafkaMetrics(m_Producer, clientID);
 
 			// if we have anything to send
 			if (messageList != null) {
@@ -341,4 +360,49 @@ public class ProducerClient {
 
 		return (messageList);
 	}
+
+	public static void logKafkaMetrics(Producer myProducer, 
+		String clientID) {
+
+	// get current time in seconds
+	Long timeNow = System.currentTimeMillis() / 1000;
+
+	// calculate elapsed time
+	Long elapsedTime = timeNow - lastMetricTime;
+
+	if (elapsedTime >= metricInterval) {
+		ArrayList<String> responseRate = myProducer.getKafkaMetric(
+			"kafka.producer:type=producer-metrics,client-id=" + 
+			clientID, "response-rate");
+		logger.info("KafkaMetric - " + responseRate.toString());
+
+		ArrayList<String> requestRate = myProducer.getKafkaMetric(
+			"kafka.producer:type=producer-metrics,client-id=" + 
+			clientID, "request-rate");
+		logger.info("KafkaMetric - " + requestRate.toString());
+
+		ArrayList<String> requestLatencyAvg = myProducer.getKafkaMetric(
+			"kafka.producer:type=producer-metrics,client-id=" + 
+			clientID, "request-latency-avg");
+		logger.info("KafkaMetric - " + requestLatencyAvg.toString());
+
+		ArrayList<String> outgoingByteRate = myProducer.getKafkaMetric(
+			"kafka.producer:type=producer-metrics,client-id=" + 
+			clientID, "outgoing-byte-rate");
+		logger.info("KafkaMetric - " + outgoingByteRate.toString());		
+
+		ArrayList<String> ioWaitTime = myProducer.getKafkaMetric(
+			"kafka.producer:type=producer-metrics,client-id=" + 
+			clientID, "io-wait-time-ns-avg");
+		logger.info("KafkaMetric - " + ioWaitTime.toString());
+		
+		ArrayList<String> batchSizeAvg = myProducer.getKafkaMetric(
+			"kafka.producer:type=producer-metrics,client-id=" + 
+			clientID, "batch-size-avg");
+		logger.info("KafkaMetric - " + batchSizeAvg.toString());		
+
+		lastMetricTime = timeNow;
+	}
+}
+
 }

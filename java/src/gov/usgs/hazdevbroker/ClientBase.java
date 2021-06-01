@@ -2,6 +2,17 @@ package gov.usgs.hazdevbroker;
 
 import java.util.*;
 
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.MBeanInfo;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanAttributeInfo;
+import javax.management.ObjectName;
+import javax.management.ReflectionException;
+import javax.management.AttributeList;
+import java.beans.IntrospectionException;
+import java.lang.management.ManagementFactory;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -27,8 +38,8 @@ public class ClientBase {
 	 * updating this file
 	 */
 	public static final Integer VERSION_MAJOR = 0;
-	public static final Integer VERSION_MINOR = 2;
-	public static final Integer VERSION_PATCH = 6; 
+	public static final Integer VERSION_MINOR = 3;
+	public static final Integer VERSION_PATCH = 0; 
 
 	/**
 	 * Client Configuration ID
@@ -40,10 +51,55 @@ public class ClientBase {
 	 */
 	static Logger baseLogger = Logger.getLogger(ClientBase.class);
 
+	private MBeanServer kafkaMetrics = null;
+
 	/**
 	 * The constructor for the ClientBase class.
 	 */
 	public ClientBase() {
+	}
+
+	/**
+	 * A function that pulls a kafka metric or metrics from JMX
+	 *
+	 * @param metricName
+	 *            - A formatted String containing the name of the metric desired
+	 * @param metricAttribute
+	 *            - A String containing the name of the desired attribute of the metric
+	 * 				if empty, returns all attributes for this metric
+	 * @return Returns an ArrayList containing the metric values as Strings
+	 */
+	public ArrayList<String> getKafkaMetric(String metricName, String metricAttribute) {
+		
+		ArrayList<String> metrics = new ArrayList<String>();
+		if (metricName == null) {
+			return metrics;
+		}
+		if (kafkaMetrics == null) {
+			kafkaMetrics = ManagementFactory.getPlatformMBeanServer();
+		}
+
+		try {
+			ObjectName objName = new ObjectName(metricName);
+
+			if (metricAttribute == "") {
+				MBeanInfo info = kafkaMetrics.getMBeanInfo(objName);
+				MBeanAttributeInfo[] attrs = info.getAttributes();
+				
+				// we don't have a specific metric, so get all of them
+				for (int i = 0; i < attrs.length; i++) {
+					Object anAttribute = kafkaMetrics.getAttribute(objName, attrs[i].getName());
+					
+					metrics.add(attrs[i].getName() + "=" + anAttribute.toString());
+				}
+			} else {
+				Object anAttribute = kafkaMetrics.getAttribute(objName, metricAttribute);
+				metrics.add(metricAttribute + "=" + anAttribute.toString());	
+			}
+		} catch (Exception e) {
+		}
+
+		return metrics;
 	}
 
 	/**

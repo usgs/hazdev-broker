@@ -38,8 +38,8 @@ public class ClientBase {
 	 * updating this file
 	 */
 	public static final Integer VERSION_MAJOR = 0;
-	public static final Integer VERSION_MINOR = 2;
-	public static final Integer VERSION_PATCH = 6; 
+	public static final Integer VERSION_MINOR = 3;
+	public static final Integer VERSION_PATCH = 0; 
 
 	/**
 	 * Client Configuration ID

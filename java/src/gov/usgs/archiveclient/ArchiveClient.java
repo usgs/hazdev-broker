@@ -375,6 +375,19 @@ public class ArchiveClient {
 			for (int i = 0; i < topicList.size(); i++) {
 				String topic = topicList.get(i);
 	
+				// for records lag, we need to check all partitions
+				ArrayList<String> partitionList = myConsumer.getPartitions(topic);
+				for (int j = 0; j < partitionList.size(); j++) {
+					String partition = partitionList.get(j);
+
+					ArrayList<String> recordsLag = myConsumer.getKafkaMetric(
+						"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" 
+						+ clientID + ",topic=" + topic + ",partition=" + partition, 
+						"records-lag");
+					logger.info("KafkaMetric - " + topic + " - " + partition + " - " + 
+						recordsLag.toString());
+				}
+
 				ArrayList<String> bytesConsumedRate = myConsumer.getKafkaMetric(
 					"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" 
 					+ clientID + ",topic=" + topic, "bytes-consumed-rate");

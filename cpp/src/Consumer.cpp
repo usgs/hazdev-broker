@@ -96,7 +96,7 @@ void Consumer::setup(rapidjson::Value &configJSON,
 	}
 
 	// create consumer
-	m_pConsumer = RdKafka::KafkaConsumer::create(conf, errstr);	
+	m_pConsumer = RdKafka::KafkaConsumer::create(conf, errstr);
 
 	// error check
 	if (!m_pConsumer) {

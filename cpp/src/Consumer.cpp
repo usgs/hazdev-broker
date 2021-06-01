@@ -80,6 +80,8 @@ Consumer::~Consumer() {
 	}
 }
 
+
+
 void Consumer::setup(rapidjson::Value &configJSON,
 		rapidjson::Value &topicConfigJSON) {
 	std::string errstr;
@@ -94,7 +96,7 @@ void Consumer::setup(rapidjson::Value &configJSON,
 	}
 
 	// create consumer
-	m_pConsumer = RdKafka::KafkaConsumer::create(conf, errstr);
+	m_pConsumer = RdKafka::KafkaConsumer::create(conf, errstr);	
 
 	// error check
 	if (!m_pConsumer) {
@@ -121,6 +123,9 @@ void Consumer::setup(std::string configString, std::string topicConfigString) {
 
 	// create consumer
 	m_pConsumer = RdKafka::KafkaConsumer::create(conf, errstr);
+
+	// set up stats callback
+	// rd_kafka_conf_set_stats_cb(conf->c_ptr_global(), Consumer::stats_cb);
 
 	// error check
 	if (!m_pConsumer) {

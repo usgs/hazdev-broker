@@ -9,6 +9,7 @@
 
 #include <Utility.h>
 
+#include <rdkafka.h>
 #include <rdkafkacpp.h>
 
 #include <string>

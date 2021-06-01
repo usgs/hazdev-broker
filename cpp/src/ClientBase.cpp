@@ -1,5 +1,6 @@
 #include <project_version.h>
 #include <ClientBase.h>
+#include <rdkafka.h>
 #include <rdkafkacpp.h>
 #include <limits>
 #include <string>

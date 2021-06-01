@@ -38,23 +38,27 @@ The steps to get and build hazdev-broker using CMake are as follows:
 1. Clone hazdev-broker.
 2. Open a command window and change directories to `lib/`
 3. Extract the `librdkafka.zip` to `lib/librdkafka/`
-4. Change directories to `cpp/`
-5. Make a build directory `mkdir build`
-6. Change to the build directory `cd build`
-7. Run CMake `cmake ..`.
-8. If you are on a \*nix system, you should now see a Makefile in the current
+4. Change directories to `lib/librdkafka/`
+5. Run the command `./configure`
+6. Run the command `./make`
+7. Run the command `./make install`
+8. Change directories to `hazdev-broker/cpp/`
+9. Make a build directory `mkdir build`
+10. Change to the build directory `cd build`
+11. Run CMake `cmake ..`.
+12. If you are on a \*nix system, you should now see a Makefile in the current
 directory.  Just type `make` to build hazdev-broker. `make doc` will generate
 the documentation if doxygen is installed on the system. `make install` will
 copy the include files and libraries to the location defined by
 `CMAKE_INSTALL_PREFIX`. You can modify the installation target by adding:``` -DCMAKE_INSTALL_PREFIX=../cpp/dist ```
 to the cmake command.
-9. If you are on Windows and have Visual Studio installed, a `HazdevBroker.sln`
+13. If you are on Windows and have Visual Studio installed, a `HazdevBroker.sln`
 file and several `.vcproj` files will be created.  You can then build them using
 Visual Studio.  Building the INSTALL project will copy the include files and
 libraries to the location defined by `CMAKE_INSTALL_PREFIX`. You can modify the
 installation target by adding:``` -DCMAKE_INSTALL_PREFIX=../cpp/dist ```
 to the cmake command.
-10. Note that for \*nix you must generate separate build directories for x86 vs
+14. Note that for \*nix you must generate separate build directories for x86 vs
 x64 compilation specifying the appropriate generator `cmake -G <generator> ..`
 
 Using

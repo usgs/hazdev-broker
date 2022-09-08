@@ -1,3 +1,7 @@
+> **THIS PROJECT HAS BEEN ARCHIVED**
+> 
+> Please see [https://code.usgs.gov/ghsc/neic/utilities/hazdev-broker)
+
 # hazdev-broker
 
 [![Build Status](https://travis-ci.org/usgs/hazdev-broker.svg?branch=master)](https://travis-ci.org/usgs/hazdev-broker)
